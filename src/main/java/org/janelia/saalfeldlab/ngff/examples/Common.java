@@ -10,10 +10,13 @@ import org.janelia.saalfeldlab.ngff.graph.TransformGraph;
 import org.janelia.saalfeldlab.ngff.spaces.Space;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
 
+import bdv.util.RandomAccessibleIntervalSource;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.cache.img.CachedCellImg;
+import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.NumericType;
+import net.imglib2.util.Util;
 import net.imglib2.view.Views;
 
 public class Common {
@@ -28,6 +31,7 @@ public class Common {
 	
 	public static <T extends NativeType<T> & NumericType<T>> RandomAccessibleInterval<T> open( N5Reader n5, String dataset ) throws IOException
 	{
+		@SuppressWarnings("unchecked")
 		final CachedCellImg<T, ?> imgRaw = (CachedCellImg<T, ?>) N5Utils.open(n5, dataset);
 		final RandomAccessibleInterval<T> img;
 		if( imgRaw.numDimensions() == 2)
@@ -38,6 +42,14 @@ public class Common {
 		return img;
 	}
 	
+	public static <T extends NumericType<T> & NativeType<T>> RandomAccessibleIntervalSource<T> openSource( N5Reader n5, String dataset, TransformGraph graph, String spaceIn ) throws IOException 
+	{
+		String space = spaceIn == null ? "" : spaceIn;
+		final RandomAccessibleInterval<T> img = open( n5 , dataset);
+		final AffineTransform3D xfm = graph.path("", space).get().totalAffine3D();
+		return new RandomAccessibleIntervalSource<T>(img, Util.getTypeFromInterval(img), xfm, "img2d");	
+	}
+
 	public static TransformGraph buildGraph( N5Reader n5 ) throws IOException 
 	{
 		return buildGraph( n5, "/" );

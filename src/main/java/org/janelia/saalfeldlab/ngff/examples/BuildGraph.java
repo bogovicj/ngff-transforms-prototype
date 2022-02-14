@@ -40,53 +40,23 @@ public class BuildGraph {
 		
 		// get the transforms and spaces
 		final TransformGraph graph = Common.buildGraph( zarr );
-		
+
+		// Try changing one or both of these to the empty string and see what happens
+		final String imgSpace = "um";
+		final String cropSpace = "crop-um";
 
 		// open and show base
-//		RandomAccessibleIntervalSource<?> src = openSource(zarr, "img2d", graph, "" ); //array space
-		RandomAccessibleIntervalSource<?> src = openSource(zarr, "img2d", graph, "um" );
+		RandomAccessibleIntervalSource<?> src = Common.openSource(zarr, "img2d", graph, imgSpace );
 		BdvOptions opts = BdvOptions.options().is2D();
 		BdvStackSource<?> bdv = BdvFunctions.show(src, opts);
-		
+
 		// open and show crop
-//		RandomAccessibleIntervalSource<?> srcCrop = openSource(zarr, "img2dcrop", graph, "" ); // array space
-		RandomAccessibleIntervalSource<?> srcCrop = openSource(zarr, "img2dcrop", graph, "crop-um" );
+		RandomAccessibleIntervalSource<?> srcCrop = Common.openSource(zarr, "img2dcrop", graph, cropSpace );
 		opts = opts.addTo(bdv);
 		BdvFunctions.show(srcCrop, opts);
 		
 		zarr.close();
 		System.out.println("done");
-	}
-	
-	public static <T extends NumericType<T> & NativeType<T>> RandomAccessibleIntervalSource<T> openSource( N5Reader n5, String dataset, TransformGraph graph, String space ) throws IOException 
-	{
-		final CachedCellImg<T, ?> imgRaw = (CachedCellImg<T, ?>) N5Utils.open(n5, dataset);
-		final RandomAccessibleInterval<T> img = Common.open( n5 , dataset);
-
-		final AffineTransform3D xfm = graph.path("", space).get().totalAffine3D();
-		return new RandomAccessibleIntervalSource<T>(img, Util.getTypeFromInterval(img), xfm, "img2d");	
-	}
-
-	public static void backups()
-	{
-//		for( RegistrationPath p : graph.allPaths("")) {	
-//			System.out.println( p );
-//		}
-
-//		Space cropUm = Arrays.stream( spaces ).filter( s -> s.getName().equals("crop-um")).findFirst().get();
-//		System.out.println( cropUm );
-//		
-//		HashMap<String, Space> namesToSpaces = graph.getNamesToSpaces();
-//		graph.allPaths( "" ).stream().forEach( p -> {
-//			RegistrationPath path = p;
-//			Space spc = namesToSpaces.get( path.getEnd() );
-//			System.out.println( spc );
-//			System.out.println( spc.equals( cropUm ));
-//			System.out.println( "" );
-//		});
-
-//		.filter( p -> namesToSpaces.get(p.getEnd()).equals(to)).findAny();
-		
 	}
 
 }
