@@ -12,27 +12,23 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Util;
 
-public abstract class AbstractLinearCoordinateTransform<P,T> extends AbstractCoordinateTransform<T> implements LinearCoordinateTransform, ParametrizedTransform<AffineGet, P> {
+public abstract class AbstractLinearCoordinateTransform<T extends AffineGet,P> extends AbstractParametrizedTransform<T,P> implements LinearCoordinateTransform<T> {
 
-	private final String path;
-	
-	public AbstractLinearCoordinateTransform( String type, String name, String inputSpace, String outputSpace ) {
-		this( type, name, null, inputSpace, outputSpace );
+	public AbstractLinearCoordinateTransform( String type, String name, 
+			String inputSpace, String outputSpace ) {
+		super( type, name, inputSpace, outputSpace );
 	}
 
 	public AbstractLinearCoordinateTransform( String type, String name, String parameterPath, 
 			String inputSpace, String outputSpace ) {
-		super( type, name, inputSpace, outputSpace );
-		this.path = parameterPath;
+		super( type, name, parameterPath, inputSpace, outputSpace );
 	}
 
 	@Override
-	public String getParameterPath() {
-		return path;
-	}
+	public abstract T getTransform();
 
 	@Override
-	public abstract AffineGet getTransform();
+	public abstract T buildTransform( P parameters );
 
 	protected static <T extends RealType<T> & NativeType<T>> double[] getDoubleArray(final N5Reader n5, final String path) {
 		if (n5.exists(path)) {

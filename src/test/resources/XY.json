@@ -1,0 +1,29 @@
+{
+  "spaces": [
+    {
+      "name": "xy",
+      "axes": [
+        {
+          "type": "space",
+          "label": "x",
+          "unit": "micrometer",
+          "discrete": false
+        },
+        {
+          "type": "space",
+          "label": "y",
+          "unit": "micrometer",
+          "discrete": false
+        }
+      ]
+    }
+  ],
+  "transformations": [
+    {
+      "type": "identity",
+      "name": "idy",
+      "input_space": "",
+      "output_space": "y"
+    }
+  ]
+}

@@ -6,8 +6,9 @@ import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.Translation;
 import net.imglib2.realtransform.Translation2D;
 import net.imglib2.realtransform.Translation3D;
+import net.imglib2.realtransform.TranslationGet;
 
-public class TranslationCoordinateTransform extends AbstractLinearCoordinateTransform<double[],TranslationCoordinateTransform> {
+public class TranslationCoordinateTransform extends AbstractLinearCoordinateTransform<TranslationGet,double[]> {
 
 	public double[] translation;
 
@@ -27,14 +28,14 @@ public class TranslationCoordinateTransform extends AbstractLinearCoordinateTran
 		buildTransform( translation );
 	}
 
-	public TranslationCoordinateTransform(  String name, final String inputSpace, final String outputSpace,
+	public TranslationCoordinateTransform( String name, final String inputSpace, final String outputSpace,
 			final String path) {
 		super("translation", name, path, inputSpace, outputSpace );
 		this.translation = null;
 	}
 
 	@Override
-	public AffineGet buildTransform( double[] parameters )
+	public TranslationGet buildTransform( double[] parameters )
 	{
 		this.translation = parameters;
 		if( parameters.length == 2 )
@@ -44,15 +45,15 @@ public class TranslationCoordinateTransform extends AbstractLinearCoordinateTran
 		else
 			transform = new Translation(parameters);
 
-		return transform;
+		return (TranslationGet) transform;
 	}
 
 	@Override
-	public AffineGet getTransform() {
+	public TranslationGet getTransform() {
 		if( transform == null && translation != null )
 			buildTransform(translation);
 
-		return transform;
+		return (TranslationGet) transform;
 	}
 
 	@Override

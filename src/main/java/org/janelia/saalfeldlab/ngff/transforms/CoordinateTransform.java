@@ -1,8 +1,8 @@
 package org.janelia.saalfeldlab.ngff.transforms;
 
-public interface CoordinateTransform {
+public interface CoordinateTransform<T> {
 
-	public Object getTransform();
+	public T getTransform();
 
 	public String getName();
 	

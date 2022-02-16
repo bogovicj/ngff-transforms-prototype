@@ -45,4 +45,22 @@ public class Axis {
 		return new Axis( String.format("dim_%d", i), "", "", true );
 	}
 
+	public String toString()
+	{
+		return label;
+	}
+
+	public boolean equals( Object other )
+	{
+		if( other instanceof Axis ) {
+			final Axis s = (Axis)other;
+			return label.equals(s.label) && 
+					discrete == s.discrete &&
+					unit.equals(s.unit) && 
+					type.equals(s.type);
+		}
+		else 
+			return false;
+	}
+
 }

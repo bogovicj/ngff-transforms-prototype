@@ -7,7 +7,7 @@ import net.imglib2.realtransform.AffineTransform;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.realtransform.AffineTransform3D;
 
-public class AffineCoordinateTransform extends AbstractLinearCoordinateTransform<double[],AffineCoordinateTransform> {
+public class AffineCoordinateTransform extends AbstractLinearCoordinateTransform<AffineGet,double[]> {
 
 	public double[] affine;
 

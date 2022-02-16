@@ -30,6 +30,10 @@ public class Space {
 		return axes;
 	}
 
+	public int numDimensions() {
+		return axes.length;
+	}
+
 	public String[] getAxisLabels() {
 		return Arrays.stream(axes).map( Axis::getLabel).toArray(String[]::new);
 	}
@@ -46,6 +50,16 @@ public class Space {
 		return axes[i];
 	}
 
+	public boolean hasAllLabels( String[] labels ) {
+		if( getAxisLabels().length != labels.length )
+			return false;
+
+		for( String l : labels )
+			if( ! Arrays.stream(axes).map( Axis::getLabel).anyMatch( x -> x.equals(l)))
+				return false;
+
+		return true;
+	}
 
 	/**
 	 * 

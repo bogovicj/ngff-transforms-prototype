@@ -1,18 +1,16 @@
 package org.janelia.saalfeldlab.ngff.examples;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 import org.janelia.saalfeldlab.n5.GzipCompression;
 import org.janelia.saalfeldlab.n5.N5Reader;
-import org.janelia.saalfeldlab.n5.bdv.N5Source;
 import org.janelia.saalfeldlab.n5.imglib2.N5Utils;
 import org.janelia.saalfeldlab.n5.zarr.N5ZarrWriter;
-import org.janelia.saalfeldlab.ngff.graph.TransformGraph;
-import org.janelia.saalfeldlab.ngff.graph.TransformPath;
 import org.janelia.saalfeldlab.ngff.spaces.Space;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransformAdapter;
+import org.janelia.saalfeldlab.ngff.transforms.IdentityCoordinateTransform;
+import org.janelia.saalfeldlab.ngff.transforms.PositionFieldCoordinateTransform;
 
 import com.google.gson.GsonBuilder;
 
@@ -66,18 +64,15 @@ public class CoordinateListSimplerExample {
 	{
 		final String root = "/home/john/projects/ngff/transformsExamples/data.zarr";
 		final String baseDataset = "/coordinatesSimple";	
-		
+
 		FinalInterval itvl = new FinalInterval( 8, 8 );
-		
+
 		GsonBuilder gsonBuilder = new GsonBuilder();
 		gsonBuilder.registerTypeAdapter(CoordinateTransform.class, new CoordinateTransformAdapter(null));
 		final N5ZarrWriter zarr = new N5ZarrWriter(root, gsonBuilder );
 
-//		generateData( zarr, baseDataset, itvl );
-		
-		show(zarr, baseDataset );
-
-//		debug(zarr, baseDataset );
+		generateData( zarr, baseDataset, itvl );
+//		show(zarr, baseDataset );
 
 		System.out.println( "done" );
 	}
@@ -126,7 +121,6 @@ public class CoordinateListSimplerExample {
 		 RealTransform identity = new Scale( 1.0 );
 		 
 		 debugPrintTransform(px);
-
 
 
 		 StackedRealTransform transform = new StackedRealTransform(px, identity);
@@ -186,27 +180,71 @@ public class CoordinateListSimplerExample {
 			 System.out.println( String.format( "i( %f ) = %f", x, rra.get().getRealDouble() ));
 		 }
 	}
-	
-	public static void generateData( N5ZarrWriter zarr, String baseDataset, Interval itvl ) throws IOException
+
+	public static void generateDataOld( N5ZarrWriter zarr, String baseDataset, Interval itvl ) throws IOException
 	{
 		final int[] blkSz = new int[]{64, 64};
 
-		zarr.createGroup(baseDataset);
+		if (!zarr.exists(baseDataset))
+			zarr.createGroup(baseDataset);
 
 		FunctionRandomAccessible<DoubleType> fimg = new FunctionRandomAccessible<>( 2,
 				(p,v) -> { v.set( p.getDoublePosition( 0 )); },
 				DoubleType::new );
 
 		IntervalView<DoubleType> img = Views.interval( fimg, itvl );
-		N5Utils.save(img, zarr, baseDataset + "/data", blkSz, new GzipCompression());
 		
-		
-		RandomAccessibleInterval<FloatType> xcoords = coordinates();
-		N5Utils.save(xcoords, zarr, baseDataset + "/xcoordinates", new int[]{8}, new GzipCompression());
+		if( !zarr.datasetExists("/data"))
+			N5Utils.save(img, zarr, baseDataset + "/data", blkSz, new GzipCompression());
+
+		if( !zarr.datasetExists("/xcoordinates")) 
+		{
+			RandomAccessibleInterval<FloatType> xcoords = coordinates();
+			N5Utils.save(xcoords, zarr, baseDataset + "/xcoordinates", new int[]{8}, new GzipCompression());
+		}
 		
 		Space[] spaces = new Space[]{
 			Common.makeSpace("transformed-space", "space", "um", "x", "y")
 		};
+
+		if( spaces != null )
+			zarr.setAttribute(baseDataset, "spaces", spaces);
+
+//		if( transforms != null )
+//			zarr.setAttribute(dataset, "transforms", transforms);	
+	}
+	
+	public static void generateData( N5ZarrWriter zarr, String baseDataset, Interval itvl ) throws IOException
+	{
+		final int[] blkSz = new int[]{64, 64};
+
+		if (!zarr.exists(baseDataset))
+			zarr.createGroup(baseDataset);
+
+		FunctionRandomAccessible<DoubleType> fimg = new FunctionRandomAccessible<>( 2,
+				(p,v) -> { v.set( p.getDoublePosition( 0 )); },
+				DoubleType::new );
+
+		IntervalView<DoubleType> img = Views.interval( fimg, itvl );
+		
+		if( !zarr.datasetExists("/data"))
+			N5Utils.save(img, zarr, baseDataset + "/data", blkSz, new GzipCompression());
+
+
+		Space xy = Common.makeSpace("xyspace", "space", "um", "x", "y");
+		Space x = Common.makeSpace("xspace", "space", "um", "x");
+		Space[] spaces = new Space[]{ xy, x };
+
+		IdentityCoordinateTransform id = new IdentityCoordinateTransform("id", "", "xspace");
+
+		if( !zarr.datasetExists("/xcoordinates")) 
+		{
+			RandomAccessibleInterval<FloatType> xcoords = coordinates();
+			PositionFieldCoordinateTransform.writePositionFieldTransform(
+					zarr, baseDataset + "/xcoordinates", xcoords,
+					blkSz, new GzipCompression(), new Space[]{ x }, 
+					new CoordinateTransform[]{ id } );
+		}
 
 		if( spaces != null )
 			zarr.setAttribute(baseDataset, "spaces", spaces);

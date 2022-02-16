@@ -1,6 +1,6 @@
 package org.janelia.saalfeldlab.ngff.transforms;
 
-public abstract class AbstractCoordinateTransform<T> implements CoordinateTransform {
+public abstract class AbstractCoordinateTransform<T> implements CoordinateTransform<T> {
 
 	private String type;
 
@@ -15,7 +15,7 @@ public abstract class AbstractCoordinateTransform<T> implements CoordinateTransf
 //
 //	private String[] output_axes;
 
-	public abstract Object getTransform();
+	public abstract T getTransform();
 
 	public AbstractCoordinateTransform( final String type, 
 			final String name,
@@ -45,13 +45,12 @@ public abstract class AbstractCoordinateTransform<T> implements CoordinateTransf
 		return output_space;
 	}
 	
-	@SuppressWarnings("unchecked")
-	public T setNameSpaces( String name, String in, String out )
+	public AbstractCoordinateTransform<T> setNameSpaces( String name, String in, String out )
 	{
 		this.name = name;
 		this.input_space = in;
 		this.output_space = out;
-		return (T)this;
+		return this;
 	}
 	
 	public String toString()

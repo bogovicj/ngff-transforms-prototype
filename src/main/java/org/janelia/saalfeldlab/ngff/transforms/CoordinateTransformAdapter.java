@@ -15,7 +15,7 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
 public class CoordinateTransformAdapter
-	implements JsonDeserializer<CoordinateTransform>, JsonSerializer<CoordinateTransform> {
+	implements JsonDeserializer<CoordinateTransform<?>>, JsonSerializer<CoordinateTransform<?>> {
 //	implements JsonDeserializer<LinearSpatialTransform> {
 
 	final N5Reader n5;
@@ -25,7 +25,7 @@ public class CoordinateTransformAdapter
 	}
 
 	@Override
-	public CoordinateTransform deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+	public CoordinateTransform<?> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
 			throws JsonParseException {
 		
 		if( !json.isJsonObject() )
@@ -35,7 +35,7 @@ public class CoordinateTransformAdapter
 		if( !jobj.has("type") )
 			return null;
 
-		CoordinateTransform out = null;
+		CoordinateTransform<?> out = null;
 		switch( jobj.get("type").getAsString() )
 		{
 		case("identity"):

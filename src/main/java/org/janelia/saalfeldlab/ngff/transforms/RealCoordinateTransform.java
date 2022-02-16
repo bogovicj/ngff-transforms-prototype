@@ -2,8 +2,8 @@ package org.janelia.saalfeldlab.ngff.transforms;
 
 import net.imglib2.realtransform.RealTransform;
 
-public interface RealCoordinateTransform extends CoordinateTransform {
+public interface RealCoordinateTransform<T extends RealTransform> extends CoordinateTransform<T> {
 
 	@Override
-	public RealTransform getTransform();
+	public T getTransform();
 }

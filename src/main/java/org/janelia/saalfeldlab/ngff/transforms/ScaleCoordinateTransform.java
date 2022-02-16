@@ -6,12 +6,13 @@ import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.Scale;
 import net.imglib2.realtransform.Scale2D;
 import net.imglib2.realtransform.Scale3D;
+import net.imglib2.realtransform.ScaleGet;
 
-public class ScaleCoordinateTransform extends AbstractLinearCoordinateTransform<double[],ScaleCoordinateTransform> {
+public class ScaleCoordinateTransform extends AbstractLinearCoordinateTransform<ScaleGet,double[]> {
 
 	public double[] scale;
 
-	public transient AffineGet transform;
+	public transient ScaleGet transform;
 
 	public ScaleCoordinateTransform( String name, final String inputSpace, final String outputSpace,
 			final double[] scale) {
@@ -34,7 +35,7 @@ public class ScaleCoordinateTransform extends AbstractLinearCoordinateTransform<
 	}
 
 	@Override
-	public AffineGet buildTransform( double[] parameters )
+	public ScaleGet buildTransform( double[] parameters )
 	{
 		this.scale = parameters;
 		if( parameters.length == 2 )
@@ -44,15 +45,15 @@ public class ScaleCoordinateTransform extends AbstractLinearCoordinateTransform<
 		else
 			transform = new Scale(parameters);
 
-		return transform;
+		return (ScaleGet) transform;
 	}
 
 	@Override
-	public AffineGet getTransform() {
+	public ScaleGet getTransform() {
 		if( transform == null && scale != null )
 			buildTransform(scale);
 
-		return transform;
+		return (ScaleGet) transform;
 	}
 
 	@Override
