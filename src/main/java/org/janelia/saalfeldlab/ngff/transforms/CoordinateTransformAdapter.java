@@ -56,6 +56,9 @@ public class CoordinateTransformAdapter
 		case("sequence"):
 			out = context.deserialize( jobj, SequenceCoordinateTransform.class );
 			break;
+		case("stacked"):
+			out = context.deserialize( jobj, StackedCoordinateTransform.class );
+			break;
 		}
 		/*
 		 * Not necessary, since parsers or consuming code are responsible for calling

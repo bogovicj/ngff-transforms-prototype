@@ -1,0 +1,39 @@
+{
+  "spaces": [
+    {
+      "name": "xyspace",
+      "axes": [
+        {
+          "type": "space",
+          "label": "x",
+          "unit": "micrometer",
+          "discrete": false
+        },
+        {
+          "type": "space",
+          "label": "y",
+          "unit": "micrometer",
+          "discrete": false
+        }
+      ]
+    }
+  ],
+  "transforms": [
+    {
+      "type": "stacked",
+      "name": "toPhysical",
+      "transforms": [
+        {
+          "type": "scale",
+          "scale": [ 2 ]
+        },
+        {
+          "type": "scale",
+          "scale": [ 3 ]
+        }
+      ],
+      "input_space": "",
+      "output_space": "xyspace"
+    }
+  ]
+}

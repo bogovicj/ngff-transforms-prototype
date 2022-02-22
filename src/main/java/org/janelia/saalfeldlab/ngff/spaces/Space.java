@@ -49,6 +49,37 @@ public class Space {
 	public Axis getAxis( int i ) {
 		return axes[i];
 	}
+	
+	public boolean hasAxis( String label ) {
+		return Arrays.stream(axes).map(Axis::getLabel).anyMatch(l -> l.equals(label));
+	}
+
+	public boolean isSubspaceOf( Space other ) {
+		return isSubspaceOf(other.getAxisLabels());
+	}
+
+	public boolean isSubspaceOf( String[] axisLabels )
+	{
+		String[] mylabels = getAxisLabels();
+		for( String l : axisLabels )
+			if( !contains( l, mylabels ))
+				return false;
+
+		return true;
+	}
+	
+	private static boolean contains( String q, String[] array )
+	{
+		for( String t : array )
+			if( t.equals(q))
+				return true;
+
+		return false;
+	}
+
+	public boolean axesLabelsMatch( String[] labels ) {
+		return Arrays.equals(labels, getAxisLabels());
+	}
 
 	public boolean hasAllLabels( String[] labels ) {
 		if( getAxisLabels().length != labels.length )
@@ -105,11 +136,9 @@ public class Space {
 	{
 		return name;
 	}
-	
-	public static final Space arraySpace( int nd )
-	{
-		return new Space("", 
-				IntStream.range(0, nd).mapToObj( i -> Axis.arrayAxis(i) ).toArray( Axis[]::new ));
+
+	public static final ArraySpace arraySpace( int nd ) {
+		return new ArraySpace( nd );
 	}
 
 }

@@ -42,7 +42,8 @@ public class Axis {
 	
 	public static final Axis arrayAxis( int i )
 	{
-		return new Axis( String.format("dim_%d", i), "", "", true );
+//		return new Axis( String.format("dim_%d", i), "", "", true );
+		return new ArrayAxis( i );
 	}
 
 	public String toString()

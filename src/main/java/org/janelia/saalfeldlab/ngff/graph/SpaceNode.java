@@ -17,14 +17,14 @@ public class SpaceNode
 {
 	private final Space space;
 
-	private final List< CoordinateTransform > edges;
+	private final List< CoordinateTransform<?> > edges;
 
 	public SpaceNode( final Space space )
 	{
-		this( space, new ArrayList< CoordinateTransform >() );
+		this( space, new ArrayList< CoordinateTransform<?> >() );
 	}
 
-	public SpaceNode( final Space space, List< CoordinateTransform > edges )
+	public SpaceNode( final Space space, List< CoordinateTransform<?> > edges )
 	{
 		this.space = space;
 		this.edges = edges;
@@ -35,7 +35,7 @@ public class SpaceNode
 		return space;
 	}
 	
-	public List<CoordinateTransform> edges()
+	public List<CoordinateTransform<?>> edges()
 	{
 		return edges;
 	}

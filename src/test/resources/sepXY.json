@@ -1,0 +1,41 @@
+{
+  "spaces": [
+    {
+      "name": "xspace",
+      "axes": [
+        {
+          "type": "space",
+          "label": "x",
+          "unit": "micrometer",
+          "discrete": false
+        }
+      ]
+    },
+    {
+      "name": "yspace",
+      "axes": [
+        {
+          "type": "space",
+          "label": "y",
+          "unit": "micrometer",
+          "discrete": false
+        }
+      ]
+    }
+  ],
+  "transforms": [
+    {
+      "type": "identity",
+      "name": "idy",
+      "input_axes": ["dim_1"],
+      "output_axes": ["y"]
+    },
+    {
+      "type": "scale",
+      "name": "sx",
+      "scale" : [2],
+      "input_axes": ["dim_0"],
+      "output_axes": ["x"]
+    }
+  ]
+}

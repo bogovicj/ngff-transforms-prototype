@@ -2,6 +2,7 @@ package org.janelia.saalfeldlab.ngff.spaces;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -15,9 +16,9 @@ import org.janelia.saalfeldlab.ngff.axes.Axis;
  *
  */
 public class Spaces {
-	
+
 	private final static String PREFIX = "DEFAULTSPACE-";
-	
+
 	private HashMap<String,Space> nameToSpace;
 
 	private HashMap<String,Axis> nameToAxis;
@@ -28,6 +29,11 @@ public class Spaces {
 		nameToSpace = new HashMap<>();
 		nameToAxis = new HashMap<>();
 		axesToSpaces = new HashMap<>();
+	}
+	
+	public Spaces( Collection<Space> spaceList ) {
+		this();
+		addAll( spaceList );
 	}
 
 	public Stream<Space> spaces() {
@@ -40,6 +46,12 @@ public class Spaces {
 
 	public Spaces( Space[] spaces ) {
 		this();
+		for( Space s : spaces )
+			add( s );
+	}
+
+	public void addAll( Collection<Space> spaces )
+	{
 		for( Space s : spaces )
 			add( s );
 	}
@@ -105,10 +117,47 @@ public class Spaces {
 				return null;
 			}
 		}
-		return new Space(name, axes);
+		Space s =  new Space(name, axes);
+		add( s );
+		return s;
+	}
+	
+	/**
+	 * Returns the first space that contains exactly the given axis labels, in the given order.
+	 * 
+	 * @param axisLabels the axis labels
+	 * @return the list of spaces
+	 */
+	public Space getSpaceFromAxes( final String... axisLabels ) {
+		return getSpacesFromAxes(axisLabels).get(0);
+	}
+	
+	/**
+	 * Returns all spaces that contains exactly the given axis labels, in the given order.
+	 * 
+	 * @param axisLabels the axis labels
+	 * @return the list of spaces
+	 */
+	public ArrayList<Space> getSpacesFromAxes( final String... axisLabels ) {
+		final ArrayList<Space> list = new ArrayList<Space>(
+				spaces()
+				.filter( s -> s.axesLabelsMatch(axisLabels))
+				.collect( Collectors.toList()));
+
+		if( list.isEmpty())
+			list.add(makeDefaultSpace(axisLabels));	
+
+		return list;
 	}
 
-	public ArrayList<Space> getSpaces( final String... axisLabels ) {
+	/**
+	 * Returns all spaces that contain the given axis labels, in any order.
+	 * Spaces in the returned list may contain axes not in the list.
+	 * 
+	 * @param axisLabels the axis labels
+	 * @return the list of spaces
+	 */
+	public ArrayList<Space> getSpacesContainingAxes( final String... axisLabels ) {
 		final ArrayList<Space> list = new ArrayList<Space>(
 				spaces()
 				.filter( s -> s.hasAllLabels(axisLabels))

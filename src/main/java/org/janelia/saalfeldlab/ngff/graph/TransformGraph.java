@@ -7,38 +7,32 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.janelia.saalfeldlab.ngff.spaces.Space;
+import org.janelia.saalfeldlab.ngff.spaces.Spaces;
+import org.janelia.saalfeldlab.ngff.transforms.AbstractCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.IdentityCoordinateTransform;
+import org.janelia.saalfeldlab.ngff.transforms.StackedCoordinateTransform;
 
-import com.fasterxml.jackson.databind.deser.impl.NullsAsEmptyProvider;
 import com.google.gson.Gson;
 
 public class TransformGraph
 {
 	public static final Gson gson = new Gson();
 
-	private final List< CoordinateTransform > transforms;
-
-	private final List< Space > spaces;
+	private final List< CoordinateTransform<?> > transforms;
+	
+	private Spaces spaces;
 
 	private final HashMap< Space, SpaceNode > spacesToNodes;
+	
+	public TransformGraph( List<CoordinateTransform<?>> transforms, final Spaces spaces ) {
 
-	private final HashMap< String, Space > namesToSpaces;
-
-	public TransformGraph( List< CoordinateTransform > transforms, 
-			final List<Space> spacesIn ) {
+		this.spaces = spaces;
 		this.transforms = transforms;
-
-		spaces = new ArrayList<>();
-		spaces.addAll(spacesIn);
-		spaces.add(Space.arraySpace(5));
-
-		namesToSpaces = new HashMap<>();
-		for( Space s : spaces )
-			namesToSpaces.put( s.getName(), s );
+		inferSpacesFromAxes();
 
 		spacesToNodes = new HashMap< Space, SpaceNode >();
-		for( CoordinateTransform t : transforms )
+		for( CoordinateTransform<?> t : transforms )
 		{
 			final Space src = getInputSpace( t );
 			if( spacesToNodes.containsKey( src ))
@@ -51,35 +45,122 @@ public class TransformGraph
 			}
 		}
 	}
+
+	public TransformGraph( List< CoordinateTransform<?> > transforms, final List<Space> spacesIn ) {
+		this( transforms, new Spaces(spacesIn) );
+	}
 	
-	public List<CoordinateTransform> getTransforms() {
+	protected void inferSpacesFromAxes( )
+	{
+		for( CoordinateTransform<?> ct : transforms )
+		{
+			if( ct instanceof AbstractCoordinateTransform )
+				if( ! ((AbstractCoordinateTransform)ct).inferSpacesFromAxes(spaces))
+				{
+					System.out.println( "uh oh - removing " + ct );
+					transforms.remove(ct);
+				}
+		}
+	}
+
+	public List<CoordinateTransform<?>> getTransforms() {
 		return transforms;
 	}
 
-	public Optional<CoordinateTransform> getTransform( String name ) {
+	public Spaces getSpaces() {
+		return spaces;
+	}
+
+	public Optional<CoordinateTransform<?>> getTransform( String name ) {
 		return transforms.stream().filter( x -> x.getName().equals(name)).findAny();
 	}
 
-	public HashMap< Space, SpaceNode > getSpaces()
-	{
+	public HashMap< Space, SpaceNode > getSpaceNodes() {
 		return spacesToNodes;
 	}
-	
-	public HashMap<String, Space> getNamesToSpaces()
-	{
-		return namesToSpaces;
-	}
-	
-	public Space getInputSpace( CoordinateTransform t ) {
-		return namesToSpaces.get( t.getInputSpace());
+
+	public Space getInputSpace( CoordinateTransform<?> t ) {
+//		return namesToSpaces.get( t.getInputSpace());
+		return spaces.getSpace(t.getInputSpace());
 	}
 
-	public Space getOutputSpace( CoordinateTransform t ) {
-		return namesToSpaces.get( t.getOutputSpace());
+	public Space getOutputSpace( CoordinateTransform<?> t ) {
+//		return namesToSpaces.get( t.getOutputSpace());
+		return spaces.getSpace(t.getOutputSpace());
+	}
+
+	/**
+	 * Returns all transforms that have all input axis in the from space
+	 * and all output axis in their to space.
+	 * 
+	 * @return
+	 */
+	public List<CoordinateTransform<?>> subTransforms( Space from, Space to) {
+		return getTransforms().stream().filter( t -> 
+			{
+				return inputIsSubspace( t, from ) && outputIsSubspace( t, to );
+			}
+		).collect( Collectors.toList());
+	}
+	
+	public CoordinateTransform<?> buildImpliedTransform( final Space from, final Space to )
+	{
+//		final List<CoordinateTransform<?>> tList = subTransforms( from, to );
+		
+		final List<CoordinateTransform<?>> tList = new ArrayList<>();
+
+		// order list
+		for( String outLabels : to.getAxisLabels() )
+		{
+			 getTransforms().stream().filter( t -> {
+					return outputHasAxis( t, outLabels );
+				}).findAny().ifPresent( t -> tList.add( t ));
+		}
+
+		StackedCoordinateTransform totalTransform = new StackedCoordinateTransform(
+				"name", from.getName(), to.getName(), tList);
+
+		return totalTransform;
+	}
+
+	public boolean inputIsSubspace( CoordinateTransform<?> t, Space s ) {
+		return s.isSubspaceOf( spaces.getSpace(t.getInputSpace()));
+	}
+
+	public boolean inputHasAxis( CoordinateTransform<?> t, String axisLabel ) {
+		return spaces.getSpace(t.getInputSpace()).hasAxis(axisLabel);
+	}
+
+	public boolean outputIsSubspace( CoordinateTransform<?> t, Space s ) {
+		return s.isSubspaceOf( spaces.getSpace(t.getOutputSpace()));
+	}
+
+	public boolean outputHasAxis( CoordinateTransform<?> t, String axisLabel ) {
+		return spaces.getSpace(t.getOutputSpace()).hasAxis(axisLabel);
+	}
+	
+	public Space spaceFrom( String[] axes ) {
+		return spaces.getSpaceFromAxes(axes);
+	}
+
+	public Space spaceFrom( String name ) {
+		return spaces.getSpace(name);
+	}
+
+	public Optional<TransformPath> pathFromAxes(final String from, final String[] toAxes ) {
+		return path( spaceFrom(from), spaceFrom(toAxes));
+	}
+
+	public Optional<TransformPath> pathFromAxes(final String[] fromAxes, final String to ) {
+		return path( spaceFrom(fromAxes), spaceFrom(to));
+	}
+
+	public Optional<TransformPath> pathFromAxes(final String[] fromAxes, final String[] toAxes ) {
+		return path( spaceFrom(fromAxes), spaceFrom(toAxes));
 	}
 
 	public Optional<TransformPath> path(final String from, final String to ) {
-		return path( namesToSpaces.get(from), namesToSpaces.get(to));
+		return path( spaceFrom(from), spaceFrom(to));
 	}
 
 	public Optional<TransformPath> path(final Space from, final Space to ) {
@@ -99,7 +180,7 @@ public class TransformGraph
 //						return y;
 //				});
 
-		return allPaths( from ).stream().filter( p -> namesToSpaces.get(p.getEnd()).equals(to)).findAny();
+		return allPaths( from ).stream().filter( p -> spaces.getSpace(p.getEnd()).equals(to)).findAny();
 	}
 
 	public List<TransformPath> paths(final Space from, final Space to ) {
@@ -108,7 +189,7 @@ public class TransformGraph
 	}
 
 	public List<TransformPath> allPaths(final String from) {
-		return allPaths(namesToSpaces.get(from));
+		return allPaths(spaces.getSpace(from));
 	}
 
 	public List<TransformPath> allPaths(final Space from) {
@@ -122,14 +203,14 @@ public class TransformGraph
 
 		SpaceNode node = spacesToNodes.get(start);
 
-		List<CoordinateTransform> edges = null;
+		List<CoordinateTransform<?>> edges = null;
 		if( node != null )
 			edges = spacesToNodes.get(start).edges();
 
 		if( edges == null || edges.size() == 0 )
 			return;
 
-		for (CoordinateTransform t : edges) {
+		for (CoordinateTransform<?> t : edges) {
 			final Space end = getOutputSpace( t );
 			
 			if( pathToStart != null && pathToStart.hasSpace( end ))

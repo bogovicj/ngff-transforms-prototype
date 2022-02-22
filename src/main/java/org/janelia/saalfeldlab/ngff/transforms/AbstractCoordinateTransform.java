@@ -1,5 +1,10 @@
 package org.janelia.saalfeldlab.ngff.transforms;
 
+import java.util.ArrayList;
+
+import org.janelia.saalfeldlab.ngff.spaces.Space;
+import org.janelia.saalfeldlab.ngff.spaces.Spaces;
+
 public abstract class AbstractCoordinateTransform<T> implements CoordinateTransform<T> {
 
 	private String type;
@@ -11,9 +16,9 @@ public abstract class AbstractCoordinateTransform<T> implements CoordinateTransf
 	private String output_space;
 
 	// implement
-//	private String[] input_axes;
-//
-//	private String[] output_axes;
+	private String[] input_axes;
+
+	private String[] output_axes;
 
 	public abstract T getTransform();
 
@@ -24,6 +29,47 @@ public abstract class AbstractCoordinateTransform<T> implements CoordinateTransf
 		this.name = name;
 		this.input_space = inputSpace;
 		this.output_space = outputSpace;
+	}
+	
+	public AbstractCoordinateTransform( final String type, 
+			final String name,
+			final String[] inputAxes, final String[] outputAxes ) {
+		this.type = type;
+		this.name = name;
+		this.input_axes = inputAxes;
+		this.output_axes = outputAxes;
+	}
+	
+	/**
+	 * 
+	 * If this object does not have input_space or output_space defined,
+	 * attempts to infer the space name, given * input_axes or output_axes, if they are defined.
+	 * 
+	 * 
+	 * @param spaces the spaces object
+	 * @return true if input_space and output_space are defined.
+	 */
+	public boolean inferSpacesFromAxes( Spaces spaces )
+	{
+		if( input_space == null && output_axes != null )
+			input_space = spaceNameFromAxesLabels( spaces, input_axes );
+
+		if( output_space == null && output_axes != null )
+			output_space = spaceNameFromAxesLabels( spaces, output_axes );
+
+		if( input_space != null && output_space != null )
+			return true;
+		else
+			return false;
+	}
+
+	private static String spaceNameFromAxesLabels( Spaces spaces, String[] axes )
+	{
+		ArrayList<Space> candidateSpaces = spaces.getSpacesFromAxes(axes);
+		if( candidateSpaces.size() == 1 )
+			return candidateSpaces.get(0).getName();
+		else
+			return null;
 	}
 
 	public String getType() {
