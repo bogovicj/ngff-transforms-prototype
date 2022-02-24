@@ -1,29 +1,28 @@
 package org.janelia.saalfeldlab.ngff.transforms;
 
-import net.imglib2.realtransform.RealTransform;
 import net.imglib2.realtransform.RealTransformSequence;
 
-public class SequenceCoordinateTransform extends AbstractCoordinateTransform {
+public class SequenceCoordinateTransform extends AbstractCoordinateTransform<RealTransformSequence> {
 
-	private final RealCoordinateTransform[] transformations;
+	private final RealCoordinateTransform<?>[] transformations;
 
-	public SequenceCoordinateTransform( final String name, final RealCoordinateTransform[] transformations, 
-			final String inputSpace, final String outputSpace ) {
+	public SequenceCoordinateTransform( final String name, final String inputSpace, final String outputSpace,
+		final RealCoordinateTransform<?>[] transformations) {
 		super("sequence", name, inputSpace, outputSpace );
 		this.transformations = transformations;
 	}
 
 	@Override
-	public RealTransform getTransform()
+	public RealTransformSequence getTransform()
 	{
 		RealTransformSequence transform = new RealTransformSequence();
-		for( RealCoordinateTransform t : getTransformations() )
+		for( RealCoordinateTransform<?> t : getTransformations() )
 			transform.add( t.getTransform() );
 
 		return transform;
 	}
 
-	public RealCoordinateTransform[] getTransformations() {
+	public RealCoordinateTransform<?>[] getTransformations() {
 		return transformations;
 	}
 

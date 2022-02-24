@@ -131,7 +131,7 @@ public class GenerateMultiscaleExampleData {
 
 			String si = String.format("s%d", i);
 			dataset = String.format("%s/s%d", baseDataset, i);
-			IntervalView<DoubleType> img = Views.interval( 
+			IntervalView<DoubleType> img = Views.interval(
 				Views.raster( RealViews.affine(fimg, s.inverse())),
 				new FinalInterval( dims ));
 
@@ -142,14 +142,12 @@ public class GenerateMultiscaleExampleData {
 
 			N5Utils.save(img, zarr, dataset, blkSz, new GzipCompression());
 		}
-		
 
 		if( spaces != null )
 			zarr.setAttribute(baseDataset, "spaces", spaces);
 
 		if( transforms != null )
 			zarr.setAttribute(baseDataset, "transformations", transforms);
-
 	}
 
 }
