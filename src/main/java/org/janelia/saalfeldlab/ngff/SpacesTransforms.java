@@ -22,6 +22,12 @@ public class SpacesTransforms {
 
 	public CoordinateTransform[] transforms;
 	
+	public SpacesTransforms( Space[] spaces, CoordinateTransform[] transforms)
+	{
+		this.spaces = spaces;
+		this.transforms = transforms;
+	}
+
 	public static SpacesTransforms load( Reader reader )
 	{
 		final GsonBuilder gsonBuilder = new GsonBuilder();

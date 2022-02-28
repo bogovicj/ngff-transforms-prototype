@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.imglib2.N5Utils;
+import org.janelia.saalfeldlab.ngff.SpacesTransforms;
 import org.janelia.saalfeldlab.ngff.axes.Axis;
 import org.janelia.saalfeldlab.ngff.graph.TransformGraph;
 import org.janelia.saalfeldlab.ngff.spaces.Space;
@@ -74,6 +75,7 @@ public class Common {
 		String space = spaceIn == null ? "" : spaceIn;
 		final RandomAccessibleInterval<T> img = open( n5 , dataset);
 		final AffineTransform3D xfm = graph.path("", space).get().totalAffine3D();
+		System.out.println( "xfm: " + xfm );
 		return new RandomAccessibleIntervalSource<T>(img, Util.getTypeFromInterval(img), xfm, "img2d");	
 	}
 
@@ -84,9 +86,15 @@ public class Common {
 
 	public static TransformGraph buildGraph( N5Reader n5, String dataset ) throws IOException 
 	{
-		Space[] spaces = n5.getAttribute(dataset, "spaces", Space[].class);
-		CoordinateTransform[] transforms = n5.getAttribute(dataset, "transformations", CoordinateTransform[].class);
-		return new TransformGraph( Arrays.asList( transforms ), Arrays.asList(spaces));	
+		return buildGraph( n5, dataset, 5 );
+	}
+
+	public static TransformGraph buildGraph( N5Reader n5, String dataset, int nd ) throws IOException 
+	{
+		final Space[] spaces = n5.getAttribute(dataset, "spaces", Space[].class);
+		final CoordinateTransform[] transforms = n5.getAttribute(dataset, "transformations", CoordinateTransform[].class);
+//		return new TransformGraph( Arrays.asList( transforms ), Arrays.asList(spaces));	
+		return new SpacesTransforms( spaces, transforms ).buildTransformGraph(nd);
 	}
 	
 	
@@ -286,7 +294,7 @@ public class Common {
 		final ScaleAndTranslation st = new ScaleAndTranslation( resolution, tParams);
 		final AffineTransform3D xfm = new AffineTransform3D();
 		xfm.scale( resolution[0], resolution[1], resolution[2] );
-		
+
 
 		RealTransform totalTransform;
 		if( distortion == null )

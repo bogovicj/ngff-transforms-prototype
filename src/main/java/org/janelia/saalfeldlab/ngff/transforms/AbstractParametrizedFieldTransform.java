@@ -16,7 +16,7 @@ public abstract class AbstractParametrizedFieldTransform<T,V extends NumericType
 
 //	protected double[] parameters;
 
-	protected int vectorAxisIndex;
+	protected transient int vectorAxisIndex;
 
 	public AbstractParametrizedFieldTransform( String type, String name, String inputSpace, String outputSpace ) {
 		this( type, name, null, inputSpace, outputSpace );

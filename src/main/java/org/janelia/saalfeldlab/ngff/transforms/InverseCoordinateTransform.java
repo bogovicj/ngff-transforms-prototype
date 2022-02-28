@@ -1,15 +1,13 @@
 package org.janelia.saalfeldlab.ngff.transforms;
 
 public class InverseCoordinateTransform<T,C extends CoordinateTransform<T>> extends AbstractCoordinateTransform<T> {
-	
-	protected String name;
 
-	protected C ct;
+	protected C transform;
 
 	public InverseCoordinateTransform( final String name, final C ct ) {
 		// input and output spaces must be swapped
 		super( "inverse_of", name, ct.getOutputSpace(), ct.getInputSpace());
-		this.ct = ct;
+		this.transform = ct;
 	}
 	
 	public InverseCoordinateTransform( final C ct ) {
@@ -18,6 +16,6 @@ public class InverseCoordinateTransform<T,C extends CoordinateTransform<T>> exte
 	}
 
 	public T getTransform() {
-		return ct.getTransform();
+		return transform.getTransform();
 	}
 }

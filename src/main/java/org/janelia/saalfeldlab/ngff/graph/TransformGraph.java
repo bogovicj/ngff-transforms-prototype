@@ -24,7 +24,13 @@ public class TransformGraph
 	private Spaces spaces;
 
 	private final HashMap< Space, SpaceNode > spacesToNodes;
-	
+
+	public TransformGraph() {
+		spaces = new Spaces();
+		transforms = new ArrayList<>();
+		spacesToNodes = new HashMap< Space, SpaceNode >();
+	}
+
 	public TransformGraph( List<CoordinateTransform<?>> transforms, final Spaces spaces ) {
 
 		this.spaces = spaces;
@@ -87,6 +93,13 @@ public class TransformGraph
 	public Space getOutputSpace( CoordinateTransform<?> t ) {
 //		return namesToSpaces.get( t.getOutputSpace());
 		return spaces.getSpace(t.getOutputSpace());
+	}
+	
+	public void addSpace( Space space )
+	{
+		if( spaces.add(space) ) {
+			spacesToNodes.put( space, new SpaceNode(space));
+		}
 	}
 
 	/**

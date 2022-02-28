@@ -98,7 +98,7 @@ public class TransformPath {
 	
 	private static void preConcatenate( AffineTransform3D tgt, AffineGet concatenate )
 	{
-		if( concatenate.numTargetDimensions() > 3 )
+		if( concatenate.numTargetDimensions() >= 3 )
 			tgt.preConcatenate(concatenate);
 		else if( concatenate.numTargetDimensions() == 2 )
 		{
