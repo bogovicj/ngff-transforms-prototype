@@ -27,10 +27,15 @@ import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
 public class CropExample {
+
+	private static final String baseDataset = "/crop";
+	private static final String imgDataset = "/crop/img2d";
+	private static final String imgCropDataset = "/crop/img2dcrop";
 	
 	public static void main( String[] args ) throws IOException
 	{
 		final String root = args[ 0 ];
+
 		FinalInterval itvl = new FinalInterval( 128, 128 );
 		FinalInterval cropitvl = Intervals.createMinMax( 10, 12, 73, 75 );
 
@@ -50,13 +55,13 @@ public class CropExample {
 		gsonBuilder.registerTypeAdapter(CoordinateTransform.class, new CoordinateTransformAdapter(null));
 		final N5ZarrWriter zarr = new N5ZarrWriter(root, gsonBuilder );
 
-		if( ! zarr.datasetExists("/img2d") || ! zarr.datasetExists("/img2dcrop"))
+		if( ! zarr.datasetExists( imgDataset ) || ! zarr.datasetExists( imgCropDataset ))
 		{
-			makeDatasets( zarr, "/img2d", itvl, null, null );
-			makeDatasets( zarr, "/img2dcrop", cropitvl, null, null );
+			makeDatasets( zarr, imgDataset, itvl, null, null );
+			makeDatasets( zarr, imgCropDataset, cropitvl, null, null );
 
-			zarr.setAttribute("/", "spaces", spaces);
-			zarr.setAttribute("/", "transformations", transforms);
+			zarr.setAttribute(baseDataset, "spaces", spaces);
+			zarr.setAttribute(baseDataset, "transformations", transforms);
 		}
 
 		// Try changing one or both of these to the empty string and see what happens
@@ -70,14 +75,14 @@ public class CropExample {
 	public static void show( N5ZarrWriter zarr, String imgSpace, String cropSpace ) throws IOException 
 	{
 		// get the transforms and spaces
-		final TransformGraph graph = Common.buildGraph( zarr );
+		final TransformGraph graph = Common.buildGraph( zarr, baseDataset );
 
-		RandomAccessibleIntervalSource<?> src = Common.openSource(zarr, "img2d", graph, imgSpace );
+		RandomAccessibleIntervalSource<?> src = Common.openSource(zarr, imgDataset, graph, imgSpace );
 		BdvOptions opts = BdvOptions.options().is2D();
 		BdvStackSource<?> bdv = BdvFunctions.show(src, opts);
 
 		// open and show crop
-		RandomAccessibleIntervalSource<?> srcCrop = Common.openSource(zarr, "img2dcrop", graph, cropSpace );
+		RandomAccessibleIntervalSource<?> srcCrop = Common.openSource(zarr, imgCropDataset, graph, cropSpace );
 		opts = opts.addTo(bdv);
 		BdvFunctions.show(srcCrop, opts);	
 	}
