@@ -20,6 +20,11 @@ public class CoordinateTransformAdapter
 
 	final N5Reader n5;
 
+	public static final String[] FIELD_TO_NULL_CHECK = new String[]{
+		"path", "name",
+		"input_axes", "output_axes", "output_space", "input_space"
+	};
+
 	public CoordinateTransformAdapter( final N5Reader n5 ) {
 		this.n5 = n5;
 	}
@@ -83,9 +88,18 @@ public class CoordinateTransformAdapter
 
 	@Override
 	public JsonElement serialize(CoordinateTransform src, Type typeOfSrc, JsonSerializationContext context) {
-		return context.serialize(src);
+		System.out.println( "ct serialize");
+		final JsonElement elem =  context.serialize(src);
+		if( elem instanceof JsonObject )
+		{
+			final JsonObject obj = (JsonObject)elem;
+			for( String f : FIELD_TO_NULL_CHECK )
+			if( obj.has(f) && obj.get(f).isJsonNull())
+				obj.remove(f);
+		}
+		return elem;
 	}
-	
+
 	public static void main( String[] args )
 	{
 		
@@ -113,8 +127,6 @@ public class CoordinateTransformAdapter
 				+ "\"transformations\": [" 
 				+ scaleString + "," + translationString 
 				+ "]}";
-		
-
 		
 		final CoordinateTransformAdapter adapter = new CoordinateTransformAdapter( null );
 
