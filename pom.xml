@@ -134,6 +134,11 @@
 			<artifactId>n5-viewer_fiji</artifactId>
 			<version>4.4.0</version>
 		</dependency>
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>bigwarp_fiji</artifactId>
+			<version>7.0.5</version>
+		</dependency>
 	</dependencies>
 
 	<repositories>

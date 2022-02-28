@@ -72,8 +72,8 @@ import net.imglib2.view.composite.GenericComposite;
 public class LensCorrectionRegistrationExample {
 
 	public static void main(String[] args) throws IOException {
-//		final String root = "/home/john/projects/ngff/transformsExamples/data.zarr";
-		final String root = "/groups/saalfeld/home/bogovicj/projects/ngff/transformsExamples/data.zarr";
+		final String root = "/home/john/projects/ngff/transformsExamples/data.zarr";
+//		final String root = "/groups/saalfeld/home/bogovicj/projects/ngff/transformsExamples/data.zarr";
 		final String baseDataset = "/lensStitchPipeline";
 
 		GsonBuilder gsonBuilder = new GsonBuilder();

@@ -16,7 +16,10 @@ import org.janelia.saalfeldlab.ngff.graph.TransformGraph;
 import org.janelia.saalfeldlab.ngff.spaces.Space;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
 
+import bdv.img.WarpedSource;
 import bdv.util.RandomAccessibleIntervalSource;
+import bdv.viewer.Interpolation;
+import bdv.viewer.Source;
 import net.imglib2.Cursor;
 import net.imglib2.Interval;
 import net.imglib2.KDTree;
@@ -36,6 +39,7 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.RealTransform;
 import net.imglib2.realtransform.RealTransformRandomAccessible;
 import net.imglib2.realtransform.RealTransformSequence;
+import net.imglib2.realtransform.RealViews;
 import net.imglib2.realtransform.ScaleAndTranslation;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.NumericType;
@@ -57,6 +61,16 @@ public class Common {
 					.toArray( Axis[]::new ));
 	}
 	
+	public static Space makeDfieldSpace( String name, String type, String unit, String... labels)
+	{
+		final Axis[] axes = Stream.concat(
+				Stream.of( new Axis( "d", "displacement", unit)), 
+				Arrays.stream(labels).map( x -> new Axis(x, type, unit )))
+			.toArray( Axis[]::new );
+
+		return new Space( name, axes);
+	}
+	
 	public static <T extends NativeType<T> & NumericType<T>> RandomAccessibleInterval<T> open( N5Reader n5, String dataset ) throws IOException
 	{
 		@SuppressWarnings("unchecked")
@@ -69,14 +83,47 @@ public class Common {
 		
 		return img;
 	}
+
+	public static <T extends NumericType<T> & NativeType<T>> RealRandomAccessible<T> rra( Source<T> src ) throws IOException 
+	{
+		if( src instanceof RandomAccessibleIntervalSource )
+		{
+			AffineTransform3D xfm = new AffineTransform3D();
+			src.getSourceTransform(0, 0, xfm);
+			System.out.println( "rra xfm: " + xfm );
+			return RealViews.transform( src.getInterpolatedSource(0, 0, Interpolation.NLINEAR), xfm.inverse() ); 
+		}
+		else
+			return null;
+
+//		else if(src instanceof WarpedSource )
+//		{
+//			
+//		}
+//		else
+//		return null;
+	}
 	
 	public static <T extends NumericType<T> & NativeType<T>> RandomAccessibleIntervalSource<T> openSource( N5Reader n5, String dataset, TransformGraph graph, String spaceIn ) throws IOException 
 	{
 		String space = spaceIn == null ? "" : spaceIn;
 		final RandomAccessibleInterval<T> img = open( n5 , dataset);
 		final AffineTransform3D xfm = graph.path("", space).get().totalAffine3D();
-		System.out.println( "xfm: " + xfm );
-		return new RandomAccessibleIntervalSource<T>(img, Util.getTypeFromInterval(img), xfm, "img2d");	
+		System.out.println( "xfm : " + xfm );
+		return new RandomAccessibleIntervalSource<T>(img, Util.getTypeFromInterval(img), xfm, dataset + " - " + space );	
+	}
+	
+	public static <T extends NumericType<T> & NativeType<T>> WarpedSource<T> openWarpedSource( N5Reader n5, String dataset, TransformGraph graph, String spaceIn ) throws IOException 
+	{
+		String space = spaceIn == null ? "" : spaceIn;
+		final RandomAccessibleInterval<T> img = open( n5 , dataset);
+		RandomAccessibleIntervalSource<T> src = new RandomAccessibleIntervalSource<T>(img, Util.getTypeFromInterval(img), new AffineTransform3D(), dataset );	
+		WarpedSource<T> wsrc = new WarpedSource<>( src, dataset + " - " + space );
+
+		final RealTransform xfm = graph.path("", space).get().totalTransorm();
+		wsrc.updateTransform(xfm);
+		wsrc.setIsTransformed(true);
+		return wsrc;
 	}
 
 	public static TransformGraph buildGraph( N5Reader n5 ) throws IOException 
