@@ -61,7 +61,26 @@ public class CoordinateTransformAdapter
 			out = context.deserialize( jobj, AffineCoordinateTransform.class );
 			break;
 		case("sequence"):
+//			JsonObject tmp = context.deserialize( jobj, JsonObject.class );
+//			System.out.println( "deserialize seq" );
+//			System.out.println( tmp );
+//			if( tmp.has("transformations"))
+//			{
+//				JsonArray ja = tmp.get("transformations").getAsJsonArray();
+//				CoordinateTransform[] transforms = new CoordinateTransform[ ja.size() ];
+//				for( int i=0; i < ja.size(); i++) {
+//					JsonElement e = ja.get(i).getAsJsonObject();
+//					transforms[i] = context.deserialize( e, CoordinateTransform.class );
+//					System.out.println( transforms[i]);
+//				}
+//
+//			}
+//			else {
+//				out = null;
+//			}
+
 			out = context.deserialize( jobj, SequenceCoordinateTransform.class );
+
 			break;
 		case("stacked"):
 			out = context.deserialize( jobj, StackedCoordinateTransform.class );
@@ -198,4 +217,5 @@ public class CoordinateTransformAdapter
 //		System.out.println( gson.toJson(seq) );
 
 	}
+
 }

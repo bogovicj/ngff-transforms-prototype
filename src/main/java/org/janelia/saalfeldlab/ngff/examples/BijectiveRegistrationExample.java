@@ -88,29 +88,23 @@ public class BijectiveRegistrationExample {
 		zarr = new N5ZarrWriter(root, gsonBuilder );
 		
 //		makeData();
-//		makeTransform();
+		makeTransform();
 //		makePoints();
-		
+
 //		String mvgDataset = baseDataset + "/jrc2010";
 		String tgtDataset = baseDataset + "/jrc2018F";
 		String mvgDataset = baseDataset + "/fcwb";
-//
-//		TransformGraph mgraph = Common.buildGraph(zarr, mvgDataset );
-//		TransformGraph tgraph = Common.buildGraph(zarr, tgtDataset );
-//		
-//////		System.out.println( graph.allPaths("").size());
-////
-//		N5Reader h5 = new N5Factory().openReader(transformH5Path);
-//		RealTransform fwdxfm = N5DisplacementField.open(h5, "dfield", false);
-//		RealTransform invxfm = N5DisplacementField.open(h5, "invdfield", false);
-//
-////		RandomAccessibleIntervalSource mvgSrc = Common.openSource(zarr, mvgDataset, mgraph, "jrc2010");
-//		RandomAccessibleIntervalSource mvgSrc = Common.openSource(zarr, mvgDataset, mgraph, "fcwb");
+
+		TransformGraph reggraph = Common.buildGraph( zarr, baseDataset );
+		System.out.println( reggraph.path("fcwb", "jrc2018F").get());
+
+//		RandomAccessibleIntervalSource mvgSrc = Common.openSource(zarr, mvgDataset, "fcwb");
+//		RandomAccessibleIntervalSource tgtSrc = Common.openSource(zarr, tgtDataset, "jrc2018F");
+
 ////		RealRandomAccessible mvgInterp = mvgSrc.getInterpolatedSource(0, 0, Interpolation.NLINEAR);
 ////		RealRandomAccessible mvgInterpReg = new RealTransformRandomAccessible(mvgInterp, fwdxfm );
 ////		RealRandomAccessible mvgInterpReg = new RealTransformRandomAccessible(mvgInterp, invxfm );
 //
-//		RandomAccessibleIntervalSource tgtSrc = Common.openSource(zarr, tgtDataset, tgraph, "jrc2018F");
 ////		RealRandomAccessible tgtInterp = tgtSrc.getInterpolatedSource(0, 0, Interpolation.NLINEAR);
 //
 ////		RealRandomAccessible mvgInterpReg = new RealTransformRandomAccessible<>( Common.rra(mvgSrc), fwdxfm );
@@ -130,8 +124,10 @@ public class BijectiveRegistrationExample {
 //		BdvOptions opts = BdvOptions.options().addTo( bdv );
 //		BdvFunctions.show(tgtSrc , opts);
 //		BdvFunctions.show(mvgInterpReg, tgtSrc.getSource(0, 0), "fcwb-reg", opts);
+		
+		System.out.println("run complete");
 	}
-	
+
 	public void makePoints() throws IOException
 	{
 		final double[] vals = Files.lines(Paths.get(ptsPath)).filter( x -> { return !x.startsWith("#"); })
@@ -184,10 +180,19 @@ public class BijectiveRegistrationExample {
 					new AffineCoordinateTransform(null, affine.inverse().getRowPackedCopy(), null, null),
 					new DisplacementFieldCoordinateTransform(null, baseDataset + "/invDfield", null, null)
 				});
+
 		transforms.add( fwdTransform );
 		transforms.add( invTransform );
 
+
 		zarr.setAttribute(baseDataset, "spaces", spaces.spaces().toArray( Space[]::new ));
+
+//		CoordinateTransform[] transformArr = new CoordinateTransform[ transforms.size()];
+//		for( int i = 0; i < transforms.size(); i++ ) {
+//			transformArr[ i ] = transforms.get( i );
+//		}
+//		zarr.setAttribute(baseDataset, "transformations", transformArr );
+
 		zarr.setAttribute(baseDataset, "transformations", new CoordinateTransform[]{ fwdTransform, invTransform } );
 
 		return affine;

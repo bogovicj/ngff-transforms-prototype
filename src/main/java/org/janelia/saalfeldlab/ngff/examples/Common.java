@@ -104,6 +104,17 @@ public class Common {
 //		return null;
 	}
 	
+	public static <T extends NumericType<T> & NativeType<T>> RandomAccessibleIntervalSource<T> openSource( N5Reader n5, String dataset, String spaceIn ) throws IOException 
+	{
+		String space = spaceIn == null ? "" : spaceIn;
+
+		final TransformGraph graph = Common.buildGraph(n5, dataset );
+		final RandomAccessibleInterval<T> img = open( n5 , dataset);
+		final AffineTransform3D xfm = graph.path("", space).get().totalAffine3D();
+		System.out.println( "xfm : " + xfm );
+		return new RandomAccessibleIntervalSource<T>(img, Util.getTypeFromInterval(img), xfm, dataset + " - " + space );	
+	}
+	
 	public static <T extends NumericType<T> & NativeType<T>> RandomAccessibleIntervalSource<T> openSource( N5Reader n5, String dataset, TransformGraph graph, String spaceIn ) throws IOException 
 	{
 		String space = spaceIn == null ? "" : spaceIn;
