@@ -1,7 +1,10 @@
 package org.janelia.saalfeldlab.ngff.examples;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.janelia.saalfeldlab.n5.GzipCompression;
 import org.janelia.saalfeldlab.n5.N5Reader;
@@ -12,9 +15,13 @@ import org.janelia.saalfeldlab.n5.zarr.N5ZarrWriter;
 import org.janelia.saalfeldlab.ngff.graph.TransformGraph;
 import org.janelia.saalfeldlab.ngff.spaces.Space;
 import org.janelia.saalfeldlab.ngff.spaces.Spaces;
+import org.janelia.saalfeldlab.ngff.transforms.AffineCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransformAdapter;
+import org.janelia.saalfeldlab.ngff.transforms.DisplacementFieldCoordinateTransform;
+import org.janelia.saalfeldlab.ngff.transforms.RealCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.ScaleCoordinateTransform;
+import org.janelia.saalfeldlab.ngff.transforms.SequenceCoordinateTransform;
 
 import com.google.gson.GsonBuilder;
 
@@ -25,9 +32,13 @@ import bdv.util.RandomAccessibleIntervalSource;
 import bdv.viewer.Interpolation;
 import ij.IJ;
 import ij.ImagePlus;
+import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.img.Img;
+import net.imglib2.img.array.ArrayImg;
+import net.imglib2.img.array.ArrayImgs;
+import net.imglib2.img.basictypeaccess.array.DoubleArray;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.RealTransform;
@@ -35,27 +46,25 @@ import net.imglib2.realtransform.RealTransformRandomAccessible;
 import net.imglib2.realtransform.RealTransformSequence;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
+import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
 public class BijectiveRegistrationExample {
 	
+	private String srcDir = "/groups/saalfeld/public/jrc2018/small_sample_data/";
+//	private String srcDir = "/home/john/projects/jrc2018/small_test_data/";
+
 //	private String root = "/home/john/projects/ngff/transformsExamples/data.zarr";
-//	private String root = "/groups/saalfeld/home/bogovicj/projects/ngff/transformsExamples/data.zarr";
-	private String root = "/home/john/projects/ngff/transformsExamples/data.zarr";
+	private String root = "/groups/saalfeld/home/bogovicj/projects/ngff/transformsExamples/data.zarr";
 
-//	private String transformH5Path = "/groups/saalfeld/public/jrc2018/small_sample_data/JRC2018F_JFRC2010_small.h5";
-//	private String transformH5Path = "/groups/saalfeld/public/jrc2018/small_sample_data/JRC2018F_FCWB_small.h5";
-	private String transformH5Path = "/home/john/projects/jrc2018/small_test_data/JRC2018F_FCWB_small.h5";
+	private String transformH5Path = srcDir + "JRC2018F_FCWB_small.h5";
 
-//	private String targetPath = "/groups/saalfeld/public/jrc2018/small_sample_data/JRC2018_FEMALE_small.tif";
-	private String targetPath = "/home/john/projects/jrc2018/small_test_data/JRC2018_FEMALE_small.tif";
-
-//	private String movingPath = "/groups/saalfeld/public/jrc2018/small_sample_data/JFRC2010_small.tif";
-
-//	private String fcwbPath = "/groups/saalfeld/public/jrc2018/small_sample_data/FCWB_small.tif";
-	private String fcwbPath = "/home/john/projects/jrc2018/small_test_data/FCWB_small.tif";
+	private String targetPath = srcDir + "JRC2018_FEMALE_small.tif";
+	private String fcwbPath = srcDir + "FCWB_small.tif";
+	private String ptsPath = srcDir + "GadMARCM-F000122_seg001_03.swc";
 
 	private String baseDataset = "/registration";
 	private N5ZarrWriter zarr;
@@ -79,7 +88,8 @@ public class BijectiveRegistrationExample {
 		zarr = new N5ZarrWriter(root, gsonBuilder );
 		
 //		makeData();
-		makeTransform();
+//		makeTransform();
+//		makePoints();
 		
 //		String mvgDataset = baseDataset + "/jrc2010";
 		String tgtDataset = baseDataset + "/jrc2018F";
@@ -121,31 +131,80 @@ public class BijectiveRegistrationExample {
 //		BdvFunctions.show(tgtSrc , opts);
 //		BdvFunctions.show(mvgInterpReg, tgtSrc.getSource(0, 0), "fcwb-reg", opts);
 	}
-
-	public void makeTransform() throws Exception
+	
+	public void makePoints() throws IOException
 	{
-		FloatType type = new FloatType();
-		N5Reader h5 = new N5Factory().openReader(transformH5Path);
+		final double[] vals = Files.lines(Paths.get(ptsPath)).filter( x -> { return !x.startsWith("#"); })
+			.flatMapToDouble( x -> {
+				return Arrays.stream( x.split(" ") ).mapToDouble(Double::parseDouble);
+			}).toArray();
 
+		final ArrayImg<DoubleType, DoubleArray> data = ArrayImgs.doubles(vals, 7, vals.length / 7);
+		final IntervalView<DoubleType> pts = Views.interval(data, Intervals.createMinMax( 2, 0, 4, data.max(1)));
+		N5Utils.save(pts, zarr, baseDataset + "/pts", new int[]{3,1028}, new GzipCompression());
+
+//		final Cursor<DoubleType> c = pts.cursor();
+//		while( c.hasNext()) { System.out.println( c.next()); }
+	}
+
+	/**
+	 * Writes the displacement fields, returns the forward affine
+	 * @return 
+	 * 
+	 * @throws Exception
+	 */
+	public AffineTransform3D makeTransform() throws Exception
+	{
+		final FloatType type = new FloatType();
+		final N5Reader h5 = new N5Factory().openReader(transformH5Path);
+
+//		final RandomAccessibleInterval<FloatType> dfield = N5DisplacementField.openField(h5, "dfield", type );
+//		final RandomAccessibleInterval<FloatType> dfieldP = N5DisplacementField.vectorAxisFirst(dfield);
+
+//		final double[] fwdScale = h5.getAttribute("dfield", "spacing", double[].class);
+//		writeDfield( dfieldP, fwdScale, "fwdDfield");
+//
+//		final RandomAccessibleInterval<FloatType> invdfield = N5DisplacementField.openField(h5, "invdfield", type );
+//		final RandomAccessibleInterval<FloatType> invdfieldP = N5DisplacementField.vectorAxisFirst(invdfield);
+//		final double[] invScale = h5.getAttribute("invdfield", "spacing", double[].class);
+//		writeDfield( invdfieldP, invScale, "invDfield");
+
+		final double[] params = h5.getAttribute("dfield", "affine", double[].class );
+		final AffineTransform3D affine = new AffineTransform3D();
+		affine.set(params);
+
+		final SequenceCoordinateTransform fwdTransform = new SequenceCoordinateTransform("jrc2018F-to-fcwb", "jrc2018F", "fcwbfinal ", 
+				new RealCoordinateTransform[] {
+					new DisplacementFieldCoordinateTransform(null, baseDataset + "/fwdDfield", null, null),
+					new AffineCoordinateTransform(null, params, null, null)
+				});
+
+		final SequenceCoordinateTransform invTransform = new SequenceCoordinateTransform("fcwb-to-jrc2018F", "fcwb", "jrc2018F",
+				new RealCoordinateTransform[] {
+					new AffineCoordinateTransform(null, affine.inverse().getRowPackedCopy(), null, null),
+					new DisplacementFieldCoordinateTransform(null, baseDataset + "/invDfield", null, null)
+				});
+		transforms.add( fwdTransform );
+		transforms.add( invTransform );
+
+		zarr.setAttribute(baseDataset, "spaces", spaces.spaces().toArray( Space[]::new ));
+		zarr.setAttribute(baseDataset, "transformations", new CoordinateTransform[]{ fwdTransform, invTransform } );
+
+		return affine;
+	}
+	
+	public <T extends RealType<T> & NativeType<T>> void writeDfield( RandomAccessibleInterval<T> dfield, double[] scale, String name ) throws IOException
+	{
 		int[] dfieldBlk = new int[]{ 3, 64, 64, 64 };
 		final GzipCompression compression = new GzipCompression();
 
 		Space space = Common.makeDfieldSpace("forwardDfield", "space", "um", "fwd-x", "fwd-y", "fwd-z");
-		RandomAccessibleInterval<FloatType> dfield = N5DisplacementField.openField(h5, "dfield", type );
 
-
-		RandomAccessibleInterval<FloatType> dfieldP = N5DisplacementField.vectorAxisFirst(dfield);
-		System.out.println( "dfield sz: " + Intervals.toString( dfield ));
-		System.out.println( "dfield P sz: " + Intervals.toString( dfieldP ));
-
-		String fwdName = "fwdDfield";
-		double[] fwdScale = h5.getAttribute("dfield", "spacing", double[].class);
-
-		final String fwdDfieldDataset = baseDataset + "/fwdDfield";
-		N5Utils.save(dfieldP, zarr, fwdDfieldDataset, dfieldBlk, compression);
+		final String fwdDfieldDataset = baseDataset + "/" + name;
+		N5Utils.save(dfield, zarr, fwdDfieldDataset, dfieldBlk, compression);
 		zarr.setAttribute(fwdDfieldDataset, "spaces", new Space[]{ space });
 		zarr.setAttribute(fwdDfieldDataset, "transformations", new CoordinateTransform[]{ 
-				new ScaleCoordinateTransform("fwdDfieldScale", "", fwdName, fwdScale ) });
+				new ScaleCoordinateTransform("fwdDfieldScale", "", name, scale ) });
 	}
 
 	public void makeData() throws IOException
@@ -154,9 +213,6 @@ public class BijectiveRegistrationExample {
 			zarr.createGroup(baseDataset);
 		}
 
-//		ImagePlus mvg = IJ.openImage(movingPath);
-//		toN5( "jrc2010", mvg );
-//
 		ImagePlus tgt = IJ.openImage(targetPath);
 		toN5( "jrc2018F", tgt);
 		

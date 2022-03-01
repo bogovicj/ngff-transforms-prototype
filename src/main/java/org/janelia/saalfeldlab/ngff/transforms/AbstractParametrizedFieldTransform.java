@@ -14,6 +14,7 @@ public abstract class AbstractParametrizedFieldTransform<T,V extends NumericType
 	
 	protected transient RandomAccessible<V>[] fields;
 
+	// TODO allow explicit 1d parameters ?
 //	protected double[] parameters;
 
 	protected transient int vectorAxisIndex;
@@ -24,7 +25,7 @@ public abstract class AbstractParametrizedFieldTransform<T,V extends NumericType
 
 	public AbstractParametrizedFieldTransform( String type, String name, String parameterPath, 
 			String inputSpace, String outputSpace ) {
-		super( type, name, inputSpace, outputSpace );
+		super( type, name, parameterPath, inputSpace, outputSpace );
 	}
 	
 	public int getVectorAxisIndex() {

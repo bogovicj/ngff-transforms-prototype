@@ -19,26 +19,26 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
 
-public class DisplacementFieldCoordinateTransform<T extends RealType<T>> extends AbstractParametrizedFieldTransform<DeformationFieldTransform<T>,T> { 
+public class DisplacementFieldCoordinateTransform<T extends RealType<T>> extends AbstractParametrizedFieldTransform<DeformationFieldTransform<T>,T> implements RealCoordinateTransform<DeformationFieldTransform<T>>{ 
 
-	protected DeformationFieldTransform<T> transform;
+	protected transient DeformationFieldTransform<T> transform;
 	
-	protected int positionAxisIndex = 0;
+	protected transient int positionAxisIndex = 0;
 
 	public DisplacementFieldCoordinateTransform( final String name, final RandomAccessible<T>[] fields, 
 			final String inputSpace, final String outputSpace ) {
-		super("position_field", name, null, inputSpace, outputSpace );
+		super("displacement_field", name, null, inputSpace, outputSpace );
 		buildTransform( fields );
 	}
 
 	public DisplacementFieldCoordinateTransform(final String name, final N5Reader n5, final String path,
 			final String inputSpace, final String outputSpace) {
-		super("position_field", name, path, inputSpace, outputSpace );
+		super("displacement_field", name, path, inputSpace, outputSpace );
 	}
 
 	public DisplacementFieldCoordinateTransform( final String name, final String path,
 			final String inputSpace, final String outputSpace) {
-		super("position_field", name, path, inputSpace, outputSpace  );
+		super("displacement_field", name, path, inputSpace, outputSpace  );
 	}
 
 	public int getVectorAxisIndex() {

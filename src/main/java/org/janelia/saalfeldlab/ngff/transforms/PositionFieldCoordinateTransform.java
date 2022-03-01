@@ -20,9 +20,9 @@ import net.imglib2.view.Views;
 
 public class PositionFieldCoordinateTransform<T extends RealType<T>> extends AbstractParametrizedFieldTransform<PositionFieldTransform<T>,T> { 
 
-	protected PositionFieldTransform<T> transform;
+	protected transient PositionFieldTransform<T> transform;
 	
-	protected int positionAxisIndex = 0;
+	protected transient int positionAxisIndex = 0;
 
 	public PositionFieldCoordinateTransform( final String name, final RandomAccessible<T>[] fields, 
 			final String inputSpace, final String outputSpace ) {

@@ -4,8 +4,10 @@ import java.lang.reflect.Type;
 
 import org.janelia.saalfeldlab.n5.N5Reader;
 
+import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -87,15 +89,37 @@ public class CoordinateTransformAdapter
 	}
 
 	@Override
-	public JsonElement serialize(CoordinateTransform src, Type typeOfSrc, JsonSerializationContext context) {
-		System.out.println( "ct serialize");
-		final JsonElement elem =  context.serialize(src);
+	public JsonElement serialize(CoordinateTransform<?> src, Type typeOfSrc, JsonSerializationContext context) {
+		
+		// why do i have to do this!?
+		final JsonElement elem;
+		if( src instanceof SequenceCoordinateTransform )
+		{
+			SequenceCoordinateTransform seq = (SequenceCoordinateTransform)src;
+			JsonArray xfms = new JsonArray();
+			for( RealCoordinateTransform<?> t : seq.getTransformations() ) {
+				Type type = TypeToken.of(t.getClass()).getType();
+				xfms.add(serialize(t, type, context ));
+			}
+			JsonObject obj =  (JsonObject) context.serialize(src);
+			obj.add("transformations", xfms);
+			elem = obj;
+		}
+		else
+		{
+			elem =  context.serialize(src);
+		}
+		
 		if( elem instanceof JsonObject )
 		{
+//			System.out.println( "json obj");
 			final JsonObject obj = (JsonObject)elem;
 			for( String f : FIELD_TO_NULL_CHECK )
 			if( obj.has(f) && obj.get(f).isJsonNull())
+			{
+//				System.out.println( "rm field " + f );
 				obj.remove(f);
+			}
 		}
 		return elem;
 	}
