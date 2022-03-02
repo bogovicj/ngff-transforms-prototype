@@ -1,5 +1,7 @@
 package org.janelia.saalfeldlab.ngff.transforms;
 
+import org.janelia.saalfeldlab.n5.N5Reader;
+
 import net.imglib2.realtransform.RealTransformSequence;
 
 public class SequenceCoordinateTransform extends AbstractCoordinateTransform<RealTransformSequence> {
@@ -18,6 +20,16 @@ public class SequenceCoordinateTransform extends AbstractCoordinateTransform<Rea
 		RealTransformSequence transform = new RealTransformSequence();
 		for( RealCoordinateTransform<?> t : getTransformations() )
 			transform.add( t.getTransform() );
+
+		return transform;
+	}
+
+	@Override
+	public RealTransformSequence getTransform(final N5Reader n5 )
+	{
+		RealTransformSequence transform = new RealTransformSequence();
+		for( RealCoordinateTransform<?> t : getTransformations() )
+			transform.add( t.getTransform(n5) );
 
 		return transform;
 	}

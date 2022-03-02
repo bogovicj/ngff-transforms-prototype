@@ -2,13 +2,12 @@ package org.janelia.saalfeldlab.ngff.transforms;
 
 import org.janelia.saalfeldlab.n5.N5Reader;
 
-import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.Scale;
 import net.imglib2.realtransform.Scale2D;
 import net.imglib2.realtransform.Scale3D;
 import net.imglib2.realtransform.ScaleGet;
 
-public class ScaleCoordinateTransform extends AbstractLinearCoordinateTransform<ScaleGet,double[]> {
+public class ScaleCoordinateTransform extends AbstractLinearCoordinateTransform<ScaleGet,double[]> implements InvertibleCoordinateTransform<ScaleGet> {
 
 	public double[] scale;
 

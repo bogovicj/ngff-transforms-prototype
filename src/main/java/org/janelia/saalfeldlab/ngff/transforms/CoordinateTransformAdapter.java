@@ -60,26 +60,33 @@ public class CoordinateTransformAdapter
 		case("affine"):
 			out = context.deserialize( jobj, AffineCoordinateTransform.class );
 			break;
+		case("displacement_field"):
+			out = context.deserialize( jobj, DisplacementFieldCoordinateTransform.class );
+			break;
+		case("position_field"):
+			out = context.deserialize( jobj, PositionFieldCoordinateTransform.class );
+			break;
 		case("sequence"):
-//			JsonObject tmp = context.deserialize( jobj, JsonObject.class );
-//			System.out.println( "deserialize seq" );
-//			System.out.println( tmp );
-//			if( tmp.has("transformations"))
-//			{
-//				JsonArray ja = tmp.get("transformations").getAsJsonArray();
-//				CoordinateTransform[] transforms = new CoordinateTransform[ ja.size() ];
-//				for( int i=0; i < ja.size(); i++) {
-//					JsonElement e = ja.get(i).getAsJsonObject();
-//					transforms[i] = context.deserialize( e, CoordinateTransform.class );
-//					System.out.println( transforms[i]);
-//				}
-//
-//			}
-//			else {
-//				out = null;
-//			}
+			// don't like that this is necessary
+			// in the future, look into RuntimeTypeAdapterFactory in gson-extras
+			// when it is more officially maintained
 
-			out = context.deserialize( jobj, SequenceCoordinateTransform.class );
+			final JsonObject tmp = context.deserialize( jobj, JsonObject.class );
+			final IdentityCoordinateTransform id = context.deserialize( tmp, IdentityCoordinateTransform.class );
+			if( tmp.has("transformations"))
+			{
+				final JsonArray ja = tmp.get("transformations").getAsJsonArray();
+				final RealCoordinateTransform[] transforms = new RealCoordinateTransform[ ja.size() ];
+				for( int i=0; i < ja.size(); i++) {
+					JsonElement e = ja.get(i).getAsJsonObject();
+					transforms[i] = context.deserialize( e, CoordinateTransform.class );
+				}
+				out = new SequenceCoordinateTransform(id.getName(), id.getInputSpace(), id.getOutputSpace(), transforms);
+//				out = seq;
+			}
+			else {
+				out = null;
+			}
 
 			break;
 		case("stacked"):
@@ -131,26 +138,94 @@ public class CoordinateTransformAdapter
 		
 		if( elem instanceof JsonObject )
 		{
-//			System.out.println( "json obj");
 			final JsonObject obj = (JsonObject)elem;
 			for( String f : FIELD_TO_NULL_CHECK )
 			if( obj.has(f) && obj.get(f).isJsonNull())
 			{
-//				System.out.println( "rm field " + f );
 				obj.remove(f);
 			}
 		}
 		return elem;
 	}
 
-	public static void main( String[] args )
+	public static void test1()
 	{
 		
-		final String affineString = "{"
-				+ "\"type\": \"affine\","
-				+ "\"affine\" : [ 11.0, 0.0, 0.1, 0.0, 12.0, 0.2 ]"
-				+ "}";
+//		final String affineString = "{"
+//				+ "\"type\": \"affine\","
+//				+ "\"affine\" : [ 11.0, 0.0, 0.1, 0.0, 12.0, 0.2 ]"
+//				+ "}";
+//
+//		final String scaleString = "{"
+//				+ "\"type\": \"scale\","
+//				+ "\"scale\" : [ 11.0, -8.0 ]"
+//				+ "}";
+//
+//		final String translationString = "{"
+//				+ "\"type\": \"translation\","
+//				+ "\"translation\" : [ -0.9, 2.1 ]"
+//				+ "}";
+//
+//		final String idString = "{"
+//				+ "\"type\": \"identity\""
+//				+ "}";
+//
+//		final String seqString = "{"
+//				+ "\"type\": \"sequence\","
+//				+ "\"transformations\": [" 
+//				+ scaleString + "," + translationString 
+//				+ "]}";
+//		
+//		final CoordinateTransformAdapter adapter = new CoordinateTransformAdapter( null );
+//
+//		final GsonBuilder gsonBuilder = new GsonBuilder();
+////		gsonBuilder.registerTypeHierarchyAdapter(SpatialTransform.class, adapter );
+//		gsonBuilder.registerTypeAdapter( CoordinateTransform.class, adapter );
+//		gsonBuilder.disableHtmlEscaping();
+//
+//		final Gson gson = gsonBuilder.create();
+//
+//		CoordinateTransform parsedAffine = gson.fromJson(affineString, CoordinateTransform.class);
+//		System.out.println( affineString );
+//		System.out.println( parsedAffine );
+//		System.out.println( gson.toJson( parsedAffine ));
+//		System.out.println( " " );
+//
+//		CoordinateTransform parsedScale = gson.fromJson(scaleString, CoordinateTransform.class);
+//		System.out.println( scaleString );
+//		System.out.println( parsedScale );
+//		System.out.println( gson.toJson( parsedScale));
+//		System.out.println( " " );
+//
+//		CoordinateTransform parsedTranslation = gson.fromJson(translationString, CoordinateTransform.class);
+//		System.out.println( translationString );
+//		System.out.println( parsedTranslation );
+//		System.out.println( gson.toJson( parsedTranslation));
+//		System.out.println( " " );
+//		
+//		CoordinateTransform parsedId = gson.fromJson(idString, CoordinateTransform.class);
+//		System.out.println( idString );
+//		System.out.println( parsedId );
+//		System.out.println( gson.toJson( parsedId ));
+//		System.out.println( " " );
+		
 
+//		CoordinateTransform parsedSeq = gson.fromJson(seqString, CoordinateTransform.class);
+//		System.out.println( seqString );
+//		System.out.println( parsedSeq );
+//		System.out.println( gson.toJson( parsedSeq ));
+//		System.out.println( " " );
+		
+//		ScaleCoordinateTransform s = new ScaleCoordinateTransform( new double[] {1, 2 });
+//		TranslationCoordinateTransform t = new TranslationCoordinateTransform( new double[] {3, 4 });
+//		SequenceCoordinateTransform seq = new SequenceCoordinateTransform( new RealCoordinateTransform[] { s, t }, "", "" );
+//		
+//		System.out.println( gson.toJson(seq) );
+
+	}
+
+	public static void seqTest()
+	{
 		final String scaleString = "{"
 				+ "\"type\": \"scale\","
 				+ "\"scale\" : [ 11.0, -8.0 ]"
@@ -161,61 +236,27 @@ public class CoordinateTransformAdapter
 				+ "\"translation\" : [ -0.9, 2.1 ]"
 				+ "}";
 
-		final String idString = "{"
-				+ "\"type\": \"identity\""
-				+ "}";
-
 		final String seqString = "{"
+				+ "\"name\": \"myseq\","
+				+ "\"output_space\": \"out\","
 				+ "\"type\": \"sequence\","
 				+ "\"transformations\": [" 
 				+ scaleString + "," + translationString 
 				+ "]}";
 		
-		final CoordinateTransformAdapter adapter = new CoordinateTransformAdapter( null );
-
-		final GsonBuilder gsonBuilder = new GsonBuilder();
-//		gsonBuilder.registerTypeHierarchyAdapter(SpatialTransform.class, adapter );
-		gsonBuilder.registerTypeAdapter( CoordinateTransform.class, adapter );
-		gsonBuilder.disableHtmlEscaping();
-
-		final Gson gson = gsonBuilder.create();
-
-		CoordinateTransform parsedAffine = gson.fromJson(affineString, CoordinateTransform.class);
-		System.out.println( affineString );
-		System.out.println( parsedAffine );
-		System.out.println( gson.toJson( parsedAffine ));
-		System.out.println( " " );
-
-		CoordinateTransform parsedScale = gson.fromJson(scaleString, CoordinateTransform.class);
-		System.out.println( scaleString );
-		System.out.println( parsedScale );
-		System.out.println( gson.toJson( parsedScale));
-		System.out.println( " " );
-
-		CoordinateTransform parsedTranslation = gson.fromJson(translationString, CoordinateTransform.class);
-		System.out.println( translationString );
-		System.out.println( parsedTranslation );
-		System.out.println( gson.toJson( parsedTranslation));
-		System.out.println( " " );
+		GsonBuilder gsonBuilder = new GsonBuilder();
+		gsonBuilder.registerTypeAdapter(CoordinateTransform.class, new CoordinateTransformAdapter(null));
+		Gson gson = gsonBuilder.create();
 		
-		CoordinateTransform parsedId = gson.fromJson(idString, CoordinateTransform.class);
-		System.out.println( idString );
-		System.out.println( parsedId );
-		System.out.println( gson.toJson( parsedId ));
-		System.out.println( " " );
-
-		CoordinateTransform parsedSeq = gson.fromJson(seqString, CoordinateTransform.class);
-		System.out.println( seqString );
-		System.out.println( parsedSeq );
-		System.out.println( gson.toJson( parsedSeq ));
-		System.out.println( " " );
 		
-//		ScaleCoordinateTransform s = new ScaleCoordinateTransform( new double[] {1, 2 });
-//		TranslationCoordinateTransform t = new TranslationCoordinateTransform( new double[] {3, 4 });
-//		SequenceCoordinateTransform seq = new SequenceCoordinateTransform( new RealCoordinateTransform[] { s, t }, "", "" );
-//		
-//		System.out.println( gson.toJson(seq) );
+		CoordinateTransform ct = gson.fromJson(seqString, CoordinateTransform.class);
+//		SequenceCoordinateTransform ct = gson.fromJson(seqString, SequenceCoordinateTransform.class);
+		System.out.println( ct );
+	}
 
+	public static void main( String[] args )
+	{
+		seqTest();
 	}
 
 }

@@ -3,6 +3,7 @@ package org.janelia.saalfeldlab.ngff.examples;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.function.DoubleUnaryOperator;
 import java.util.stream.Collectors;
@@ -15,6 +16,8 @@ import org.janelia.saalfeldlab.ngff.axes.Axis;
 import org.janelia.saalfeldlab.ngff.graph.TransformGraph;
 import org.janelia.saalfeldlab.ngff.spaces.Space;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
+import org.janelia.saalfeldlab.ngff.transforms.ParametrizedTransform;
+import org.janelia.saalfeldlab.ngff.transforms.RealCoordinateTransform;
 
 import bdv.img.WarpedSource;
 import bdv.util.RandomAccessibleIntervalSource;
@@ -124,17 +127,56 @@ public class Common {
 		return new RandomAccessibleIntervalSource<T>(img, Util.getTypeFromInterval(img), xfm, dataset + " - " + space );	
 	}
 	
-	public static <T extends NumericType<T> & NativeType<T>> WarpedSource<T> openWarpedSource( N5Reader n5, String dataset, TransformGraph graph, String spaceIn ) throws IOException 
-	{
-		String space = spaceIn == null ? "" : spaceIn;
-		final RandomAccessibleInterval<T> img = open( n5 , dataset);
-		RandomAccessibleIntervalSource<T> src = new RandomAccessibleIntervalSource<T>(img, Util.getTypeFromInterval(img), new AffineTransform3D(), dataset );	
-		WarpedSource<T> wsrc = new WarpedSource<>( src, dataset + " - " + space );
+//	public static <T extends NumericType<T> & NativeType<T>> WarpedSource<T> openWarpedSource( N5Reader n5, String dataset, TransformGraph graph, String spaceIn ) throws IOException 
+//	{
+//		String space = spaceIn == null ? "" : spaceIn;
+//		final RandomAccessibleInterval<T> img = open( n5 , dataset);
+//		RandomAccessibleIntervalSource<T> src = new RandomAccessibleIntervalSource<T>(img, Util.getTypeFromInterval(img), new AffineTransform3D(), dataset );	
+//		WarpedSource<T> wsrc = new WarpedSource<>( src, dataset + " - " + space );
+//
+//		final RealTransform xfm = graph.path("", space).get().totalTransorm();
+//		wsrc.updateTransform(xfm);
+//		wsrc.setIsTransformed(true);
+//		return wsrc;
+//	}
 
-		final RealTransform xfm = graph.path("", space).get().totalTransorm();
-		wsrc.updateTransform(xfm);
+	public static <T extends NumericType<T> & NativeType<T>> WarpedSource<T> transformImage( 
+			N5Reader n5, String imageDataset, String registrationDataset, String space ) throws IOException {
+		final TransformGraph graph = Common.buildGraph(n5, registrationDataset, imageDataset );	
+		Optional<RealTransform> t = graph.path(space,"").map( p -> p.totalTransform(n5));
+		System.out.println( t );
+		
+		Source<T> src;
+		try {
+			src = openSource( n5, imageDataset, "" );
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
+		
+		final WarpedSource<T> wsrc = new WarpedSource<T>( src, imageDataset + " - " + space );
+		t.ifPresent( x -> wsrc.updateTransform(x));
 		wsrc.setIsTransformed(true);
 		return wsrc;
+
+//		WarpedSource<T> ws = graph.path(space,"").map( p -> {
+//			Source<T> src;
+//			try {
+//				src = openSource( n5, imageDataset, "" );
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//				return null;
+//			}
+//
+//			final WarpedSource<T> wsrc = new WarpedSource<T>( src, imageDataset + " - " + space );
+//			final RealTransform t = p.totalTransform();
+//			wsrc.updateTransform(t);
+//			wsrc.setIsTransformed(true);
+//			return wsrc;
+//		}).orElse(null);
+
+//		return ws;
+//		return null;
 	}
 
 	public static TransformGraph buildGraph( N5Reader n5 ) throws IOException 
@@ -154,8 +196,19 @@ public class Common {
 //		return new TransformGraph( Arrays.asList( transforms ), Arrays.asList(spaces));	
 		return new SpacesTransforms( spaces, transforms ).buildTransformGraph(nd);
 	}
-	
-	
+
+	public static TransformGraph buildGraph( N5Reader n5, String... datasets ) throws IOException 
+	{
+		TransformGraph graph = null;
+		for( String d : datasets )
+			if( graph == null)
+				graph = buildGraph( n5, d );
+			else
+				graph.add( buildGraph( n5, d ));
+
+		return graph;
+	}
+
 	/**
 	 * Returns an infinite stream of random points on a circle of the given radius.
 	 * 

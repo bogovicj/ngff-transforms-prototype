@@ -2,7 +2,8 @@ package org.janelia.saalfeldlab.ngff.transforms;
 
 import net.imglib2.realtransform.ExplicitInvertibleRealTransform;
 
-public class BijectionCoordinateTransform extends AbstractCoordinateTransform<ExplicitInvertibleRealTransform> {
+public class BijectionCoordinateTransform extends AbstractCoordinateTransform<ExplicitInvertibleRealTransform> 
+	implements InvertibleCoordinateTransform<ExplicitInvertibleRealTransform> {
 
 	private final RealCoordinateTransform<?> forward;
 

@@ -8,7 +8,8 @@ import net.imglib2.realtransform.Translation2D;
 import net.imglib2.realtransform.Translation3D;
 import net.imglib2.realtransform.TranslationGet;
 
-public class TranslationCoordinateTransform extends AbstractLinearCoordinateTransform<TranslationGet,double[]> {
+public class TranslationCoordinateTransform extends AbstractLinearCoordinateTransform<TranslationGet,double[]> 
+	implements InvertibleCoordinateTransform<TranslationGet> {
 
 	public double[] translation;
 

@@ -97,6 +97,10 @@ public class Spaces {
 	public Space getSpace( final String name ) {
 		return nameToSpace.get(name);
 	}
+	
+	public boolean hasSpace( final String name ) {
+		return nameToSpace.containsKey(name);
+	}
 
 	public String defaultSpaceName( final String... axisLabels ) {
 		return PREFIX + Arrays.stream(axisLabels).collect(Collectors.joining("-"));

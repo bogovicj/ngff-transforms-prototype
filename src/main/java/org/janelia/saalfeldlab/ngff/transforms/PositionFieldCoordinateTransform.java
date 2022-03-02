@@ -23,8 +23,10 @@ public class PositionFieldCoordinateTransform<T extends RealType<T>> extends Abs
 	protected transient PositionFieldTransform<T> transform;
 	
 	protected transient int positionAxisIndex = 0;
+	
+	protected static final transient String vectorAxisType = "position";
 
-	public PositionFieldCoordinateTransform( final String name, final RandomAccessible<T>[] fields, 
+	public PositionFieldCoordinateTransform( final String name, final RealRandomAccessible<T>[] fields, 
 			final String inputSpace, final String outputSpace ) {
 		super("position_field", name, null, inputSpace, outputSpace );
 		buildTransform( fields );
@@ -45,12 +47,7 @@ public class PositionFieldCoordinateTransform<T extends RealType<T>> extends Abs
 	}
 
 	@Override
-	public PositionFieldTransform<T> buildTransform( final RandomAccessible<T>[] fields ) {
-		@SuppressWarnings("unchecked")
-		RealRandomAccessible<T>[] realFields = new RealRandomAccessible[ fields.length ];
-		for( int i = 0; i < fields.length; i++ )
-			realFields[i] = Views.interpolate(fields[i], new NLinearInterpolatorFactory<>());
-
+	public PositionFieldTransform<T> buildTransform( final RealRandomAccessible<T>[] realFields ) {
 		return new PositionFieldTransform<>(realFields);
 	}
 
@@ -70,7 +67,7 @@ public class PositionFieldCoordinateTransform<T extends RealType<T>> extends Abs
 
 			final Space space = spaces[0];
 			for( int i = 0; i < space.numDimensions(); i++ )
-				if( space.getAxisTypes()[i].equals("positions"))
+				if( space.getAxisTypes()[i].equals(vectorAxisType))
 					return i;
 
 		} catch (IOException e) { }	

@@ -11,15 +11,18 @@ import org.janelia.saalfeldlab.ngff.spaces.Spaces;
 import org.janelia.saalfeldlab.ngff.transforms.AbstractCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.IdentityCoordinateTransform;
+import org.janelia.saalfeldlab.ngff.transforms.InvertibleCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.StackedCoordinateTransform;
 
 import com.google.gson.Gson;
+
+import net.imglib2.realtransform.InvertibleRealTransform;
 
 public class TransformGraph
 {
 	public static final Gson gson = new Gson();
 
-	private final List< CoordinateTransform<?> > transforms;
+	private final ArrayList< CoordinateTransform<?> > transforms;
 	
 	private Spaces spaces;
 
@@ -34,21 +37,25 @@ public class TransformGraph
 	public TransformGraph( List<CoordinateTransform<?>> transforms, final Spaces spaces ) {
 
 		this.spaces = spaces;
-		this.transforms = transforms;
+		this.transforms = new ArrayList<>();
+//		this.transforms.addAll(transforms);
+//		this.transforms = transforms = new ArrayList<>();;
 		inferSpacesFromAxes();
 
 		spacesToNodes = new HashMap< Space, SpaceNode >();
 		for( CoordinateTransform<?> t : transforms )
 		{
-			final Space src = getInputSpace( t );
-			if( spacesToNodes.containsKey( src ))
-				spacesToNodes.get( src ).edges().add( t );
-			else
-			{
-				SpaceNode node = new SpaceNode( src );
-				node.edges().add( t );
-				spacesToNodes.put( src, node );
-			}
+			addTransform(t);
+
+//			final Space src = getInputSpace( t );
+//			if( spacesToNodes.containsKey( src ))
+//				spacesToNodes.get( src ).edges().add( t );
+//			else
+//			{
+//				SpaceNode node = new SpaceNode( src );
+//				node.edges().add( t );
+//				spacesToNodes.put( src, node );
+//			}
 		}
 	}
 
@@ -95,11 +102,49 @@ public class TransformGraph
 		return spaces.getSpace(t.getOutputSpace());
 	}
 	
+	public void addTransform( CoordinateTransform<?> t ) {
+		addTransform( t, true );
+	}
+
+	private void addTransform( CoordinateTransform<?> t, boolean addInverse ) {
+		if( transforms.stream().anyMatch( x -> x.getName().equals(t.getName())) )
+			return;
+
+		if( spaces.hasSpace(t.getInputSpace()) && spaces.hasSpace(t.getOutputSpace()))
+		{
+			final Space src = getInputSpace( t );
+			if( spacesToNodes.containsKey( src ))
+				spacesToNodes.get( src ).edges().add( t );
+			else
+			{
+				SpaceNode node = new SpaceNode( src );
+				node.edges().add( t );
+				spacesToNodes.put( src, node );
+			}
+
+			transforms.add(t);
+		}
+		
+		if( addInverse && t instanceof InvertibleCoordinateTransform )
+			addTransform( new InverseCT( (InvertibleCoordinateTransform) t ), false );
+	}
+	
+//	private void addInverse( InvertibleCoordinateTransform<?> ict )
+//	{
+//		addTransform( new InverseCT(ict));
+//	}
+
 	public void addSpace( Space space )
 	{
 		if( spaces.add(space) ) {
 			spacesToNodes.put( space, new SpaceNode(space));
 		}
+	}
+	
+	public void add( TransformGraph g )
+	{
+		g.spaces.spaces().forEach( s -> addSpace(s));
+		g.transforms.stream().forEach( t -> addTransform(t));
 	}
 
 	/**
@@ -238,6 +283,33 @@ public class TransformGraph
 			paths.add(p);
 			allPathsHelper(paths, end, p);
 		}
+	}
+	
+	private static class InverseCT extends AbstractCoordinateTransform<InvertibleRealTransform>
+		implements InvertibleCoordinateTransform<InvertibleRealTransform> {
+
+		InvertibleCoordinateTransform<?> ict;
+		
+		public InverseCT( InvertibleCoordinateTransform<?> ict ) {
+			super("invWrap", "inv-" + ict.getName(), ict.getOutputSpace(), ict.getInputSpace());
+			this.ict = ict;
+		}
+
+		public InverseCT(String type, String name, String inputSpace, String outputSpace, 
+				InvertibleCoordinateTransform<?> ict ) {
+			super(type, name, inputSpace, outputSpace);
+			this.ict = ict;
+		}
+
+		@Override
+		public InvertibleRealTransform getTransform() {
+			return ict.getInverseTransform();
+		} 
+
+		@Override
+		public InvertibleRealTransform getInverseTransform() {
+			return ict.getTransform();
+		} 
 	}
 	
 }

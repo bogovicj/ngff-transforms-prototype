@@ -13,8 +13,6 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.realtransform.DeformationFieldTransform;
-import net.imglib2.realtransform.PositionFieldTransform;
-import net.imglib2.transform.Transform;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
@@ -24,8 +22,10 @@ public class DisplacementFieldCoordinateTransform<T extends RealType<T>> extends
 	protected transient DeformationFieldTransform<T> transform;
 	
 	protected transient int positionAxisIndex = 0;
+	
+	protected static final transient String vectorAxisType = "displacement";
 
-	public DisplacementFieldCoordinateTransform( final String name, final RandomAccessible<T>[] fields, 
+	public DisplacementFieldCoordinateTransform( final String name, final RealRandomAccessible<T>[] fields, 
 			final String inputSpace, final String outputSpace ) {
 		super("displacement_field", name, null, inputSpace, outputSpace );
 		buildTransform( fields );
@@ -46,13 +46,8 @@ public class DisplacementFieldCoordinateTransform<T extends RealType<T>> extends
 	}
 
 	@Override
-	public DeformationFieldTransform<T> buildTransform( final RandomAccessible<T>[] fields ) {
-		@SuppressWarnings("unchecked")
-		RealRandomAccessible<T>[] realFields = new RealRandomAccessible[ fields.length ];
-		for( int i = 0; i < fields.length; i++ )
-			realFields[i] = Views.interpolate(fields[i], new NLinearInterpolatorFactory<>());
-
-		return new DeformationFieldTransform<>(realFields);
+	public DeformationFieldTransform<T> buildTransform( final RealRandomAccessible<T>[] fields ) {
+		return new DeformationFieldTransform<>(fields);
 	}
 
 	@Override
@@ -71,7 +66,7 @@ public class DisplacementFieldCoordinateTransform<T extends RealType<T>> extends
 
 			final Space space = spaces[0];
 			for( int i = 0; i < space.numDimensions(); i++ )
-				if( space.getAxisTypes()[i].equals("positions"))
+				if( space.getAxisTypes()[i].equals(vectorAxisType))
 					return i;
 
 		} catch (IOException e) { }	

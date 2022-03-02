@@ -3,6 +3,7 @@ package org.janelia.saalfeldlab.ngff.graph;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.ngff.spaces.Space;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.IdentityCoordinateTransform;
@@ -19,11 +20,11 @@ public class TransformPath {
 	
 	private final TransformPath parentPath;
 	
-	private final CoordinateTransform transform;
+	private final CoordinateTransform<?> transform;
 
 	private final String end;
 
-	public TransformPath( final CoordinateTransform transform ) {
+	public TransformPath( final CoordinateTransform<?> transform ) {
 
 		this.start = transform.getInputSpace();
 		this.transform = transform;
@@ -31,7 +32,7 @@ public class TransformPath {
 		this.parentPath = null;
 	}
 	
-	public TransformPath( final TransformPath parentPath, final CoordinateTransform transform ) {
+	public TransformPath( final TransformPath parentPath, final CoordinateTransform<?> transform ) {
 
 		this.start = parentPath.getStart();
 		this.parentPath = parentPath;
@@ -39,17 +40,6 @@ public class TransformPath {
 		this.end = transform.getOutputSpace();
 	}
 
-//	public RegistrationPath( final Space start,
-//			final RegistrationPath parentPath,
-//			final Transform transform,
-//			final Space end ) {
-//
-//		this.start = start;
-//		this.parentPath = parentPath;
-//		this.transform = transform;
-//		this.end = end;
-//	}
-	
 	public String getStart()
 	{
 		return start;
@@ -60,10 +50,12 @@ public class TransformPath {
 		return end;
 	}
 
-//	public double getCost()
-//	{
-//		return flatTransforms().stream().mapToDouble( Transform::getCost ).sum();
-//	}
+	public double getCost()
+	{
+		// consider this in the future
+		// return flatTransforms().stream().mapToDouble( Transform::getCost ).sum();
+		return 1.0;
+	}
 
 	/**
 	 * Does this path run through the given space.
@@ -73,7 +65,7 @@ public class TransformPath {
 	 */
 	public boolean hasSpace( final Space space )
 	{
-		if ( start.equals( space ) || end.equals( space ))
+		if ( start.equals( space.getName() ) || end.equals( space.getName() ))
 			return true;
 
 		if( parentPath != null )
@@ -82,14 +74,21 @@ public class TransformPath {
 		return false;
 	}
 	
-	public List<CoordinateTransform> flatTransforms()
+	public List<CoordinateTransform<?>> flatTransforms()
 	{
-		LinkedList<CoordinateTransform> flatTransforms = new LinkedList<>();
+		LinkedList<CoordinateTransform<?>> flatTransforms = new LinkedList<>();
 		flatTransforms( flatTransforms );
 		return flatTransforms;
 	}
 	
-	public RealTransform totalTransorm()
+	public RealTransform totalTransform( final N5Reader n5 )
+	{
+		final RealTransformSequence total = new RealTransformSequence();
+		flatTransforms().forEach( t -> total.add( ((RealTransform)t.getTransform( n5 ))));
+		return total;
+	}
+
+	public RealTransform totalTransform()
 	{
 		final RealTransformSequence total = new RealTransformSequence();
 		flatTransforms().forEach( t -> total.add( ((RealTransform)t.getTransform())));
@@ -141,7 +140,7 @@ public class TransformPath {
 		return total;
 	}
 
-	private void flatTransforms( LinkedList<CoordinateTransform> queue )
+	private void flatTransforms( LinkedList<CoordinateTransform<?>> queue )
 	{
 		if( transform != null )
 			queue.addFirst( transform );
@@ -171,7 +170,7 @@ public class TransformPath {
 	public String toString()
 	{
 		List<String> spaceList = flatSpace();
-		List<CoordinateTransform> transformList = flatTransforms();
+		List<CoordinateTransform<?>> transformList = flatTransforms();
 
 		if( transformList.size() < 1 )
 			return "(" + spaceList.get(0) + ")";

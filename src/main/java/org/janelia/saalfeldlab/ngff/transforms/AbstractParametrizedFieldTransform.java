@@ -7,12 +7,16 @@ import org.janelia.saalfeldlab.n5.imglib2.N5Utils;
 
 import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.RealRandomAccessible;
+import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
+import net.imglib2.realtransform.InvertibleRealTransform;
+import net.imglib2.realtransform.RealTransformRealRandomAccessible;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.view.Views;
 
-public abstract class AbstractParametrizedFieldTransform<T,V extends NumericType<V>> extends AbstractParametrizedTransform<T,RandomAccessible<V>[]> {
+public abstract class AbstractParametrizedFieldTransform<T,V extends NumericType<V>> extends AbstractParametrizedTransform<T,RealRandomAccessible<V>[]> {
 	
-	protected transient RandomAccessible<V>[] fields;
+	protected transient RealRandomAccessible<V>[] fields;
 
 	// TODO allow explicit 1d parameters ?
 //	protected double[] parameters;
@@ -34,31 +38,65 @@ public abstract class AbstractParametrizedFieldTransform<T,V extends NumericType
 
 	public abstract int parseVectorAxisIndex( N5Reader n5 );
 
-	public RandomAccessible<V>[] getFields() {
+	public RealRandomAccessible<V>[] getFields() {
 		return fields;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public RandomAccessible<V>[] getParameters(N5Reader n5) {
+	public RealRandomAccessible<V>[] getParameters(N5Reader n5) {
 
+		final String path = getParameterPath();
 		vectorAxisIndex = parseVectorAxisIndex( n5 );
-		try {
-			final RandomAccessibleInterval<V> fieldRaw = (RandomAccessibleInterval<V>) N5Utils.open(n5, getParameterPath() );
 
-			if( vectorAxisIndex < 0 ) {
-				fields = new RandomAccessible[]{ fieldRaw };
+		InvertibleRealTransform ixfm = null;
+		CoordinateTransform<?>[] transforms = null;
+		try {
+			transforms = n5.getAttribute(path, "transformations", CoordinateTransform[].class);
+		} catch (IOException e1) { }
+
+		System.out.println( transforms[0] instanceof InvertibleCoordinateTransform );
+		if( transforms != null && transforms.length >= 1  &&
+			 transforms[0] instanceof InvertibleCoordinateTransform ) {
+				
+			ixfm = ((InvertibleCoordinateTransform<?>)transforms[0]).getInverseTransform();
+		}
+
+		final RandomAccessibleInterval<V> fieldRaw;
+		try {
+			fieldRaw = (RandomAccessibleInterval<V>) N5Utils.open(n5, path );
+		} catch (IOException e) { 
+			return null;
+		}
+
+		RandomAccessibleInterval<V>[] rawfields;
+		int nv = 1;
+		if( vectorAxisIndex < 0 ) {
+			rawfields = new RandomAccessibleInterval[]{ fieldRaw };
+		}
+		else {
+			nv = (int)fieldRaw.dimension(getVectorAxisIndex());
+			rawfields = new RandomAccessibleInterval[nv];
+			for( int i = 0; i < nv; i++ )
+			{
+				rawfields[i] = Views.hyperSlice(fieldRaw, vectorAxisIndex, i);
+			}
+		}
+
+		fields = new RealRandomAccessible[ rawfields.length ];
+		for( int i = 0; i < nv; i++ ) {
+			if( ixfm == null )
+			{
+				fields[i] = Views.interpolate( rawfields[i], new NLinearInterpolatorFactory<>());
 			}
 			else {
-				final int nv = (int)fieldRaw.dimension(getVectorAxisIndex());
-				fields = new RandomAccessible[nv];
-				for( int i = 0; i < nv; i++ )
-					fields[i] = Views.hyperSlice(fieldRaw, vectorAxisIndex, i);
+				fields[i] = new RealTransformRealRandomAccessible( 
+						Views.interpolate( rawfields[i], new NLinearInterpolatorFactory<>()),
+						ixfm );
 			}
+		}
 
-			return fields;
-		} catch (IOException e) { }
-		return null;
+		return fields;
 	}
 
 }

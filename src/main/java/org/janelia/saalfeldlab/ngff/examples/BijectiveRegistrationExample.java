@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.janelia.saalfeldlab.n5.GzipCompression;
 import org.janelia.saalfeldlab.n5.N5Reader;
@@ -13,18 +14,21 @@ import org.janelia.saalfeldlab.n5.imglib2.N5DisplacementField;
 import org.janelia.saalfeldlab.n5.imglib2.N5Utils;
 import org.janelia.saalfeldlab.n5.zarr.N5ZarrWriter;
 import org.janelia.saalfeldlab.ngff.graph.TransformGraph;
+import org.janelia.saalfeldlab.ngff.graph.TransformPath;
 import org.janelia.saalfeldlab.ngff.spaces.Space;
 import org.janelia.saalfeldlab.ngff.spaces.Spaces;
 import org.janelia.saalfeldlab.ngff.transforms.AffineCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransformAdapter;
 import org.janelia.saalfeldlab.ngff.transforms.DisplacementFieldCoordinateTransform;
+import org.janelia.saalfeldlab.ngff.transforms.ParametrizedTransform;
 import org.janelia.saalfeldlab.ngff.transforms.RealCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.ScaleCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.SequenceCoordinateTransform;
 
 import com.google.gson.GsonBuilder;
 
+import bdv.img.WarpedSource;
 import bdv.util.BdvFunctions;
 import bdv.util.BdvOptions;
 import bdv.util.BdvStackSource;
@@ -41,6 +45,7 @@ import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.basictypeaccess.array.DoubleArray;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.realtransform.DeformationFieldTransform;
 import net.imglib2.realtransform.RealTransform;
 import net.imglib2.realtransform.RealTransformRandomAccessible;
 import net.imglib2.realtransform.RealTransformSequence;
@@ -54,11 +59,11 @@ import net.imglib2.view.Views;
 
 public class BijectiveRegistrationExample {
 	
-	private String srcDir = "/groups/saalfeld/public/jrc2018/small_sample_data/";
-//	private String srcDir = "/home/john/projects/jrc2018/small_test_data/";
+	private String srcDir = "/home/john/projects/jrc2018/small_test_data/";
+//	private String srcDir = "/groups/saalfeld/public/jrc2018/small_sample_data/";
 
-//	private String root = "/home/john/projects/ngff/transformsExamples/data.zarr";
-	private String root = "/groups/saalfeld/home/bogovicj/projects/ngff/transformsExamples/data.zarr";
+	private String root = "/home/john/projects/ngff/transformsExamples/data.zarr";
+//	private String root = "/groups/saalfeld/home/bogovicj/projects/ngff/transformsExamples/data.zarr";
 
 	private String transformH5Path = srcDir + "JRC2018F_FCWB_small.h5";
 
@@ -86,17 +91,19 @@ public class BijectiveRegistrationExample {
 		GsonBuilder gsonBuilder = new GsonBuilder();
 		gsonBuilder.registerTypeAdapter(CoordinateTransform.class, new CoordinateTransformAdapter(null));
 		zarr = new N5ZarrWriter(root, gsonBuilder );
-		
+
 //		makeData();
-		makeTransform();
+//		makeTransform();
 //		makePoints();
 
 //		String mvgDataset = baseDataset + "/jrc2010";
 		String tgtDataset = baseDataset + "/jrc2018F";
 		String mvgDataset = baseDataset + "/fcwb";
 
-		TransformGraph reggraph = Common.buildGraph( zarr, baseDataset );
-		System.out.println( reggraph.path("fcwb", "jrc2018F").get());
+
+		WarpedSource<?> wsrc = Common.transformImage(zarr, mvgDataset, baseDataset, "jrc2018F" );
+		System.out.println( wsrc );
+		BdvFunctions.show(wsrc);
 
 //		RandomAccessibleIntervalSource mvgSrc = Common.openSource(zarr, mvgDataset, "fcwb");
 //		RandomAccessibleIntervalSource tgtSrc = Common.openSource(zarr, tgtDataset, "jrc2018F");
@@ -139,8 +146,6 @@ public class BijectiveRegistrationExample {
 		final IntervalView<DoubleType> pts = Views.interval(data, Intervals.createMinMax( 2, 0, 4, data.max(1)));
 		N5Utils.save(pts, zarr, baseDataset + "/pts", new int[]{3,1028}, new GzipCompression());
 
-//		final Cursor<DoubleType> c = pts.cursor();
-//		while( c.hasNext()) { System.out.println( c.next()); }
 	}
 
 	/**
@@ -154,22 +159,21 @@ public class BijectiveRegistrationExample {
 		final FloatType type = new FloatType();
 		final N5Reader h5 = new N5Factory().openReader(transformH5Path);
 
-//		final RandomAccessibleInterval<FloatType> dfield = N5DisplacementField.openField(h5, "dfield", type );
-//		final RandomAccessibleInterval<FloatType> dfieldP = N5DisplacementField.vectorAxisFirst(dfield);
+		final RandomAccessibleInterval<FloatType> dfield = N5DisplacementField.openField(h5, "dfield", type );
+		final RandomAccessibleInterval<FloatType> dfieldP = N5DisplacementField.vectorAxisFirst(dfield);
+		final double[] fwdScale = h5.getAttribute("dfield", "spacing", double[].class);
+		writeDfield( dfieldP, fwdScale, "fwdDfield");
 
-//		final double[] fwdScale = h5.getAttribute("dfield", "spacing", double[].class);
-//		writeDfield( dfieldP, fwdScale, "fwdDfield");
-//
-//		final RandomAccessibleInterval<FloatType> invdfield = N5DisplacementField.openField(h5, "invdfield", type );
-//		final RandomAccessibleInterval<FloatType> invdfieldP = N5DisplacementField.vectorAxisFirst(invdfield);
-//		final double[] invScale = h5.getAttribute("invdfield", "spacing", double[].class);
-//		writeDfield( invdfieldP, invScale, "invDfield");
+		final RandomAccessibleInterval<FloatType> invdfield = N5DisplacementField.openField(h5, "invdfield", type );
+		final RandomAccessibleInterval<FloatType> invdfieldP = N5DisplacementField.vectorAxisFirst(invdfield);
+		final double[] invScale = h5.getAttribute("invdfield", "spacing", double[].class);
+		writeDfield( invdfieldP, invScale, "invDfield");
 
 		final double[] params = h5.getAttribute("dfield", "affine", double[].class );
 		final AffineTransform3D affine = new AffineTransform3D();
 		affine.set(params);
 
-		final SequenceCoordinateTransform fwdTransform = new SequenceCoordinateTransform("jrc2018F-to-fcwb", "jrc2018F", "fcwbfinal ", 
+		final SequenceCoordinateTransform fwdTransform = new SequenceCoordinateTransform("jrc2018F-to-fcwb", "jrc2018F", "fcwb", 
 				new RealCoordinateTransform[] {
 					new DisplacementFieldCoordinateTransform(null, baseDataset + "/fwdDfield", null, null),
 					new AffineCoordinateTransform(null, params, null, null)
@@ -247,5 +251,48 @@ public class BijectiveRegistrationExample {
 		
 		zarr.setAttribute(dataset, "spaces", new Space[]{ space });
 		zarr.setAttribute(dataset, "transformations", new CoordinateTransform[]{ scale });
+	}
+	
+	
+	public static void old() {
+//		final CoordinateTransform[] transforms = zarr.getAttribute(baseDataset, "transformations", CoordinateTransform[].class);
+//		System.out.println( transforms );
+//		SequenceCoordinateTransform seq = (SequenceCoordinateTransform)transforms[0];
+//		DisplacementFieldCoordinateTransform df = (DisplacementFieldCoordinateTransform) seq.getTransformations()[0];
+//		System.out.println( df );
+////		DeformationFieldTransform xfm = df.getTransform();
+////		System.out.println( xfm );
+//		
+//		System.out.println( "is pt? " + ( df instanceof ParametrizedTransform ));
+//		
+//		DeformationFieldTransform xfm = (DeformationFieldTransform) df.getTransform(zarr);
+//		System.out.println( xfm );
+
+//		TransformGraph reggraph = Common.buildGraph( zarr, baseDataset );
+//		reggraph.getTransforms().stream().forEach(System.out::println);
+//		System.out.println( reggraph.path("fcwb", "jrc2018F").get());
+		
+//		System.out.println( "" );
+//		final TransformGraph graph = Common.buildGraph(zarr, baseDataset, mvgDataset );	
+//		System.out.println( graph.getSpaces().getSpace(""));
+//		graph.getTransforms().stream().forEach(System.out::println);
+//		System.out.println( graph.path("", "jrc2018F").get());
+//		System.out.println( "" );
+//		System.out.println( graph.path("jrc2018F","").get());
+//
+//
+//		TransformPath p = graph.path("jrc2018F","").get();
+//		System.out.println( p );
+//
+//		System.out.println( "" );
+//		List<CoordinateTransform<?>> ts = p.flatTransforms();
+//		ts.stream().forEach( System.out::println );
+//		
+//		System.out.println( "" );
+//		for( CoordinateTransform<?> t : ts )
+//		{
+//			System.out.println( t.getName());
+//			System.out.println( t.getTransform(zarr));
+//		}
 	}
 }
