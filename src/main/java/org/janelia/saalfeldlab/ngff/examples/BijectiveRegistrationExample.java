@@ -37,6 +37,8 @@ import bdv.viewer.Interpolation;
 import ij.IJ;
 import ij.ImagePlus;
 import net.imglib2.Cursor;
+import net.imglib2.FinalInterval;
+import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.img.Img;
@@ -79,13 +81,13 @@ public class BijectiveRegistrationExample {
 	public static void main(String[] args) throws Exception {
 		new BijectiveRegistrationExample().run();
 	}
-	
-	public BijectiveRegistrationExample()
-	{
+
+	public BijectiveRegistrationExample() {
 		spaces = new Spaces();
 		transforms = new ArrayList<>();
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void run() throws Exception
 	{
 		GsonBuilder gsonBuilder = new GsonBuilder();
@@ -96,42 +98,25 @@ public class BijectiveRegistrationExample {
 //		makeTransform();
 //		makePoints();
 
-//		String mvgDataset = baseDataset + "/jrc2010";
-		String tgtDataset = baseDataset + "/jrc2018F";
-		String mvgDataset = baseDataset + "/fcwb";
+		final String tgtDataset = baseDataset + "/jrc2018F";
+		final String mvgDataset = baseDataset + "/fcwb";
 
 
-		WarpedSource<?> wsrc = Common.transformImage(zarr, mvgDataset, baseDataset, "jrc2018F" );
-		System.out.println( wsrc );
-		BdvFunctions.show(wsrc);
-
-//		RandomAccessibleIntervalSource mvgSrc = Common.openSource(zarr, mvgDataset, "fcwb");
-//		RandomAccessibleIntervalSource tgtSrc = Common.openSource(zarr, tgtDataset, "jrc2018F");
-
-////		RealRandomAccessible mvgInterp = mvgSrc.getInterpolatedSource(0, 0, Interpolation.NLINEAR);
-////		RealRandomAccessible mvgInterpReg = new RealTransformRandomAccessible(mvgInterp, fwdxfm );
-////		RealRandomAccessible mvgInterpReg = new RealTransformRandomAccessible(mvgInterp, invxfm );
+//		final RandomAccessibleIntervalSource tgtSrc = Common.openSource(zarr, tgtDataset, "jrc2018F");
+//		final BdvStackSource bdv = BdvFunctions.show( tgtSrc );
+//		final BdvOptions opts = BdvOptions.options().addTo(bdv);
+//		final Interval itvl = tgtSrc.getSource(0, 0);
 //
-////		RealRandomAccessible tgtInterp = tgtSrc.getInterpolatedSource(0, 0, Interpolation.NLINEAR);
-//
-////		RealRandomAccessible mvgInterpReg = new RealTransformRandomAccessible<>( Common.rra(mvgSrc), fwdxfm );
-//
-//		AffineTransform3D pixToPhys = new AffineTransform3D();
-//		mvgSrc.getSourceTransform(0, 0, pixToPhys);
-//
-//		RealTransformSequence seq = new RealTransformSequence();
-//		seq.add( fwdxfm );
-//		seq.add( pixToPhys.inverse() );
-//
-//		RealRandomAccessible rra = mvgSrc.getInterpolatedSource(0, 0, Interpolation.NLINEAR);
-//		RealRandomAccessible mvgInterpReg = new RealTransformRandomAccessible( rra, seq );
-//
-////		BdvFunctions.show(mvgSrc);
-//		BdvStackSource bdv = BdvFunctions.show( mvgSrc );
-//		BdvOptions opts = BdvOptions.options().addTo( bdv );
-//		BdvFunctions.show(tgtSrc , opts);
-//		BdvFunctions.show(mvgInterpReg, tgtSrc.getSource(0, 0), "fcwb-reg", opts);
+//		final String space = "jrc2018F";
+//		Common.show(zarr, mvgDataset, baseDataset, space, itvl, opts);
 		
+		
+		final RandomAccessibleIntervalSource mvgSrc = Common.openSource(zarr, mvgDataset, "fcwb");
+		final BdvStackSource bdv = BdvFunctions.show( mvgSrc );
+		final BdvOptions opts = BdvOptions.options().addTo(bdv);
+		final Interval itvl = mvgSrc.getSource(0, 0);
+		Common.show(zarr, tgtDataset, baseDataset, "fcwb", itvl, opts);
+
 		System.out.println("run complete");
 	}
 
@@ -187,7 +172,6 @@ public class BijectiveRegistrationExample {
 
 		transforms.add( fwdTransform );
 		transforms.add( invTransform );
-
 
 		zarr.setAttribute(baseDataset, "spaces", spaces.spaces().toArray( Space[]::new ));
 
@@ -294,5 +278,33 @@ public class BijectiveRegistrationExample {
 //			System.out.println( t.getName());
 //			System.out.println( t.getTransform(zarr));
 //		}
+		
+		
+//		RandomAccessibleIntervalSource mvgSrc = Common.openSource(zarr, mvgDataset, "fcwb");
+//		RandomAccessibleIntervalSource tgtSrc = Common.openSource(zarr, tgtDataset, "jrc2018F");
+//
+////		RealRandomAccessible mvgInterp = mvgSrc.getInterpolatedSource(0, 0, Interpolation.NLINEAR);
+////		RealRandomAccessible mvgInterpReg = new RealTransformRandomAccessible(mvgInterp, fwdxfm );
+////		RealRandomAccessible mvgInterpReg = new RealTransformRandomAccessible(mvgInterp, invxfm );
+//
+////		RealRandomAccessible tgtInterp = tgtSrc.getInterpolatedSource(0, 0, Interpolation.NLINEAR);
+//
+////		RealRandomAccessible mvgInterpReg = new RealTransformRandomAccessible<>( Common.rra(mvgSrc), fwdxfm );
+//
+//		AffineTransform3D pixToPhys = new AffineTransform3D();
+//		mvgSrc.getSourceTransform(0, 0, pixToPhys);
+//
+//		RealTransformSequence seq = new RealTransformSequence();
+//		seq.add( fwdxfm );
+//		seq.add( pixToPhys.inverse() );
+//
+//		RealRandomAccessible rra = mvgSrc.getInterpolatedSource(0, 0, Interpolation.NLINEAR);
+//		RealRandomAccessible mvgInterpReg = new RealTransformRandomAccessible( rra, seq );
+//
+////		BdvFunctions.show(mvgSrc);
+//		BdvStackSource bdv = BdvFunctions.show( mvgSrc );
+//		BdvOptions opts = BdvOptions.options().addTo( bdv );
+//		BdvFunctions.show(tgtSrc , opts);
+//		BdvFunctions.show(mvgInterpReg, tgtSrc.getSource(0, 0), "fcwb-reg", opts);
 	}
 }

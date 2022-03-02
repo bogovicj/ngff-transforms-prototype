@@ -20,6 +20,8 @@ import org.janelia.saalfeldlab.ngff.transforms.ParametrizedTransform;
 import org.janelia.saalfeldlab.ngff.transforms.RealCoordinateTransform;
 
 import bdv.img.WarpedSource;
+import bdv.util.BdvFunctions;
+import bdv.util.BdvOptions;
 import bdv.util.RandomAccessibleIntervalSource;
 import bdv.viewer.Interpolation;
 import bdv.viewer.Source;
@@ -36,6 +38,8 @@ import net.imglib2.algorithm.neighborhood.Neighborhood;
 import net.imglib2.cache.img.CachedCellImg;
 import net.imglib2.img.Img;
 import net.imglib2.interpolation.neighborsearch.RBFInterpolator;
+import net.imglib2.interpolation.randomaccess.NLinearInterpolatorARGBFactory;
+import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.loops.LoopBuilder;
 import net.imglib2.parallel.DefaultTaskExecutor;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -139,25 +143,47 @@ public class Common {
 //		wsrc.setIsTransformed(true);
 //		return wsrc;
 //	}
+	
+	public static <T extends NumericType<T> & NativeType<T>> void show(
+			N5Reader n5, String imageDataset, String registrationDataset, String space, final Interval interval,
+			final BdvOptions opts )
+	{
+		RealRandomAccessible<T> rimg;
+		try {
 
-	public static <T extends NumericType<T> & NativeType<T>> WarpedSource<T> transformImage( 
+			rimg = transformImage( n5, imageDataset, registrationDataset, space );
+			BdvFunctions.show(rimg, interval, imageDataset + " - " + space, opts );
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static <T extends NumericType<T> & NativeType<T>> RealRandomAccessible<T> transformImage( 
 			N5Reader n5, String imageDataset, String registrationDataset, String space ) throws IOException {
 		final TransformGraph graph = Common.buildGraph(n5, registrationDataset, imageDataset );	
 		Optional<RealTransform> t = graph.path(space,"").map( p -> p.totalTransform(n5));
 		System.out.println( t );
 		
-		Source<T> src;
-		try {
-			src = openSource( n5, imageDataset, "" );
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
+		final RandomAccessibleInterval<T> img = open( n5 , imageDataset );
+		RealRandomAccessible<T> rra = Views.interpolate( Views.extendZero( img ), new NLinearInterpolatorFactory<T>());
+		if( t.isPresent() )
+			return new RealTransformRandomAccessible<>(rra, t.get() );
+		else 
+			return rra;
+
+//		Source<T> src;
+//		try {
+//			src = openSource( n5, imageDataset, "" );
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//			return null;
+//		}
 		
-		final WarpedSource<T> wsrc = new WarpedSource<T>( src, imageDataset + " - " + space );
-		t.ifPresent( x -> wsrc.updateTransform(x));
-		wsrc.setIsTransformed(true);
-		return wsrc;
+//		final WarpedSource<T> wsrc = new WarpedSource<T>( src, imageDataset + " - " + space );
+//		t.ifPresent( x -> wsrc.updateTransform(x));
+//		wsrc.setIsTransformed(true);
+//		return wsrc;
 
 //		WarpedSource<T> ws = graph.path(space,"").map( p -> {
 //			Source<T> src;

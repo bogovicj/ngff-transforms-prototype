@@ -69,17 +69,17 @@ public abstract class AbstractParametrizedFieldTransform<T,V extends NumericType
 			return null;
 		}
 
-		RandomAccessibleInterval<V>[] rawfields;
+		RandomAccessible<V>[] rawfields;
 		int nv = 1;
 		if( vectorAxisIndex < 0 ) {
-			rawfields = new RandomAccessibleInterval[]{ fieldRaw };
+			rawfields = new RandomAccessible[]{ fieldRaw };
 		}
 		else {
 			nv = (int)fieldRaw.dimension(getVectorAxisIndex());
-			rawfields = new RandomAccessibleInterval[nv];
+			rawfields = new RandomAccessible[nv];
 			for( int i = 0; i < nv; i++ )
 			{
-				rawfields[i] = Views.hyperSlice(fieldRaw, vectorAxisIndex, i);
+				rawfields[i] = Views.extendZero(Views.hyperSlice( fieldRaw, vectorAxisIndex, i));
 			}
 		}
 
