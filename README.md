@@ -15,7 +15,9 @@ In addition to "array space", there are:
 * "scanner" : physical space oriented with respect to the scanner
 * "LPS" : anatomical physical space ("left - posterior - superior")
 
-The associated metadata:
+<details>
+<summary><b>The associated metadata</b></summary>
+
 ```json
 {                                                                                                                                                                                                          
   "spaces": [
@@ -53,8 +55,8 @@ The associated metadata:
     }   
   ]
 }
-
 ```
+</details>
 
 ### Crop
 
@@ -82,3 +84,60 @@ final String imgSpace = "um";
 final String cropSpace = "crop-um";
 show( zarr, imgSpace, cropSpace );
 ```
+
+
+<details>
+<summary><b>The associated metadata</b></summary>
+  
+```json
+{
+  "spaces": [
+    {
+      "name": "um",
+      "axes": [
+        { "type": "space", "label": "y", "unit": "micrometer", "discrete": false },
+        { "type": "space", "label": "z", "unit": "micrometer", "discrete": false }
+      ]
+    },
+    {
+      "name": "crop-offset",
+      "axes": [
+        { "type": "space", "label": "cj", "unit": "pixels", "discrete": false },
+        { "type": "space", "label": "ci", "unit": "pixels", "discrete": false }
+      ]
+    },
+    {
+      "name": "crop-um",
+      "axes": [
+        { "type": "space", "label": "cy", "unit": "micrometer", "discrete": false },
+        { "type": "space", "label": "cz", "unit": "micrometer", "discrete": false }
+      ]
+    }
+  ],
+  "transformations": [
+    {
+      "scale": [ 2.2, 1.1 ],
+      "type": "scale",
+      "name": "to-um",
+      "input_space": "",
+      "output_space": "um"
+    },
+    {
+      "scale": [ 2.2, 1.1 ],
+      "type": "scale",
+      "name": "crop-to-um",
+      "input_space": "crop-offset",
+      "output_space": "crop-um"
+    },
+    {
+      "translation": [ 10, 12 ],
+      "type": "translation",
+      "name": "offset",
+      "input_space": "",
+      "output_space": "crop-offset"
+    }
+  ]
+}
+```
+  
+</details>
