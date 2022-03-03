@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.janelia.saalfeldlab.n5.N5Reader;
+import org.janelia.saalfeldlab.ngff.examples.Common;
 import org.janelia.saalfeldlab.ngff.spaces.Space;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.IdentityCoordinateTransform;
@@ -95,49 +96,9 @@ public class TransformPath {
 		return total;
 	}
 	
-	private static void preConcatenate( AffineTransform3D tgt, AffineGet concatenate )
-	{
-		if( concatenate.numTargetDimensions() >= 3 )
-			tgt.preConcatenate(concatenate);
-		else if( concatenate.numTargetDimensions() == 2 )
-		{
-			AffineTransform3D c = new AffineTransform3D();
-			c.set(
-					concatenate.get(0, 0), concatenate.get(0, 1), 0, concatenate.get(0, 2),
-					concatenate.get(1, 0), concatenate.get(1, 1), 0, concatenate.get(1, 2),
-					0, 0, 1, 0);
-
-			tgt.preConcatenate(c);
-		}
-		else if( concatenate.numTargetDimensions() == 1 )
-		{
-			ScaleAndTranslation c = new ScaleAndTranslation(
-					new double[]{ 1, 1, 1 },
-					new double[]{ 0, 0, 0});
-			tgt.preConcatenate(c);
-		}
-	}
-	
-	
 	public AffineTransform3D totalAffine3D()
 	{
-		final AffineTransform3D total = new AffineTransform3D();
-		for( CoordinateTransform ct : flatTransforms() )
-		{
-			if( ct instanceof IdentityCoordinateTransform )
-				continue;
-			else {
-				Object t = ct.getTransform();
-				if( t instanceof AffineGet )
-				{
-					preConcatenate( total, (AffineGet) t  );
-	//				total.preConcatenate((AffineGet) t );
-				}
-				else
-					return null;
-			}
-		}
-		return total;
+		return Common.toAffine3D(flatTransforms());
 	}
 
 	private void flatTransforms( LinkedList<CoordinateTransform<?>> queue )

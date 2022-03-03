@@ -2,6 +2,7 @@ package org.janelia.saalfeldlab.ngff.examples;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -16,8 +17,8 @@ import org.janelia.saalfeldlab.ngff.axes.Axis;
 import org.janelia.saalfeldlab.ngff.graph.TransformGraph;
 import org.janelia.saalfeldlab.ngff.spaces.Space;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
-import org.janelia.saalfeldlab.ngff.transforms.ParametrizedTransform;
-import org.janelia.saalfeldlab.ngff.transforms.RealCoordinateTransform;
+import org.janelia.saalfeldlab.ngff.transforms.IdentityCoordinateTransform;
+import org.janelia.saalfeldlab.ngff.transforms.SequenceCoordinateTransform;
 
 import bdv.img.WarpedSource;
 import bdv.util.BdvFunctions;
@@ -42,6 +43,7 @@ import net.imglib2.interpolation.randomaccess.NLinearInterpolatorARGBFactory;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.loops.LoopBuilder;
 import net.imglib2.parallel.DefaultTaskExecutor;
+import net.imglib2.realtransform.AffineGet;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.RealTransform;
 import net.imglib2.realtransform.RealTransformRandomAccessible;
@@ -59,6 +61,63 @@ import net.imglib2.view.SubsampleView;
 import net.imglib2.view.Views;
 
 public class Common {
+	
+	public static AffineTransform3D toAffine3D( SequenceCoordinateTransform seq )
+	{
+		return toAffine3D( Arrays.asList( seq.getTransformations()));
+	}
+
+	public static AffineTransform3D toAffine3D( Collection<CoordinateTransform<?>> transforms )
+	{
+		final AffineTransform3D total = new AffineTransform3D();
+		for( CoordinateTransform ct : transforms )
+		{
+			if( ct instanceof IdentityCoordinateTransform )
+				continue;
+			else if( ct instanceof SequenceCoordinateTransform )
+			{
+				AffineTransform3D t = toAffine3D( (SequenceCoordinateTransform)ct );
+				if( t == null )
+					return null;
+				else
+					preConcatenate( total, (AffineGet) t  );
+			}
+			else {
+				Object t = ct.getTransform();
+				if( t instanceof AffineGet )
+				{
+					preConcatenate( total, (AffineGet) t  );
+	//				total.preConcatenate((AffineGet) t );
+				}
+				else
+					return null;
+			}
+		}
+		return total;
+	}
+	
+	public static void preConcatenate( AffineTransform3D tgt, AffineGet concatenate )
+	{
+		if( concatenate.numTargetDimensions() >= 3 )
+			tgt.preConcatenate(concatenate);
+		else if( concatenate.numTargetDimensions() == 2 )
+		{
+			AffineTransform3D c = new AffineTransform3D();
+			c.set(
+					concatenate.get(0, 0), concatenate.get(0, 1), 0, concatenate.get(0, 2),
+					concatenate.get(1, 0), concatenate.get(1, 1), 0, concatenate.get(1, 2),
+					0, 0, 1, 0);
+
+			tgt.preConcatenate(c);
+		}
+		else if( concatenate.numTargetDimensions() == 1 )
+		{
+			ScaleAndTranslation c = new ScaleAndTranslation(
+					new double[]{ 1, 1, 1 },
+					new double[]{ 0, 0, 0});
+			tgt.preConcatenate(c);
+		}
+	}
 
 	public static Space makeSpace( String name, String type, String unit, String... labels)
 	{
