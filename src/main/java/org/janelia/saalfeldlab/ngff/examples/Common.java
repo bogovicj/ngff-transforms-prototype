@@ -127,7 +127,7 @@ public class Common {
 		String space = spaceIn == null ? "" : spaceIn;
 		final RandomAccessibleInterval<T> img = open( n5 , dataset);
 		final AffineTransform3D xfm = graph.path("", space).get().totalAffine3D();
-		System.out.println( "xfm : " + xfm );
+		System.out.println("xfm: " + xfm );
 		return new RandomAccessibleIntervalSource<T>(img, Util.getTypeFromInterval(img), xfm, dataset + " - " + space );	
 	}
 	

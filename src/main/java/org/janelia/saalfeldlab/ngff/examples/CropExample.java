@@ -35,7 +35,22 @@ public class CropExample {
 	public static void main( String[] args ) throws IOException
 	{
 		final String root = args[ 0 ];
+		final GsonBuilder gsonBuilder = new GsonBuilder();
+		gsonBuilder.registerTypeAdapter(CoordinateTransform.class, new CoordinateTransformAdapter(null));
+		final N5ZarrWriter zarr = new N5ZarrWriter(root, gsonBuilder );
 
+		makeData( zarr );
+
+		// Try changing one or both of these to the empty string and see what happens
+		final String imgSpace = "";
+		final String cropSpace = "crop-offset";
+		show( zarr, imgSpace, cropSpace );
+
+		zarr.close();
+	}
+	
+	public static void makeData( final N5ZarrWriter zarr ) throws IOException
+	{
 		FinalInterval itvl = new FinalInterval( 128, 128 );
 		FinalInterval cropitvl = Intervals.createMinMax( 10, 12, 73, 75 );
 
@@ -51,10 +66,6 @@ public class CropExample {
 				new TranslationCoordinateTransform( "offset", "", "crop-offset", new double[]{10, 12})
 		};
 
-		final GsonBuilder gsonBuilder = new GsonBuilder();
-		gsonBuilder.registerTypeAdapter(CoordinateTransform.class, new CoordinateTransformAdapter(null));
-		final N5ZarrWriter zarr = new N5ZarrWriter(root, gsonBuilder );
-
 		if( ! zarr.datasetExists( imgDataset ) || ! zarr.datasetExists( imgCropDataset ))
 		{
 			makeDatasets( zarr, imgDataset, itvl, null, null );
@@ -63,13 +74,6 @@ public class CropExample {
 			zarr.setAttribute(baseDataset, "spaces", spaces);
 			zarr.setAttribute(baseDataset, "transformations", transforms);
 		}
-
-		// Try changing one or both of these to the empty string and see what happens
-		final String imgSpace = "um";
-		final String cropSpace = "crop-um";
-		show( zarr, imgSpace, cropSpace );
-
-		zarr.close();
 	}
 
 	public static void show( N5ZarrWriter zarr, String imgSpace, String cropSpace ) throws IOException 
@@ -85,6 +89,7 @@ public class CropExample {
 		RandomAccessibleIntervalSource<?> srcCrop = Common.openSource(zarr, imgCropDataset, graph, cropSpace );
 		opts = opts.addTo(bdv);
 		BdvFunctions.show(srcCrop, opts);	
+		bdv.setDisplayRangeBounds(0, 255);
 	}
 	
 	public static void makeDatasets( N5ZarrWriter zarr, String dataset, Interval itvl,
