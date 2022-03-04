@@ -1,5 +1,6 @@
 package org.janelia.saalfeldlab.ngff.examples;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -18,6 +19,7 @@ import org.janelia.saalfeldlab.ngff.graph.TransformPath;
 import org.janelia.saalfeldlab.ngff.spaces.Space;
 import org.janelia.saalfeldlab.ngff.spaces.Spaces;
 import org.janelia.saalfeldlab.ngff.transforms.AffineCoordinateTransform;
+import org.janelia.saalfeldlab.ngff.transforms.BijectionCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransformAdapter;
 import org.janelia.saalfeldlab.ngff.transforms.DisplacementFieldCoordinateTransform;
@@ -61,17 +63,20 @@ import net.imglib2.view.Views;
 
 public class BijectiveRegistrationExample {
 	
-	private String srcDir = "/home/john/projects/jrc2018/small_test_data/";
+//	private String srcDir = "/home/john/projects/jrc2018/small_test_data/";
 //	private String srcDir = "/groups/saalfeld/public/jrc2018/small_sample_data/";
 
-	private String root = "/home/john/projects/ngff/transformsExamples/data.zarr";
+//	private String root = "/home/john/projects/ngff/transformsExamples/data.zarr";
 //	private String root = "/groups/saalfeld/home/bogovicj/projects/ngff/transformsExamples/data.zarr";
 
-	private String transformH5Path = srcDir + "JRC2018F_FCWB_small.h5";
 
-	private String targetPath = srcDir + "JRC2018_FEMALE_small.tif";
-	private String fcwbPath = srcDir + "FCWB_small.tif";
-	private String ptsPath = srcDir + "GadMARCM-F000122_seg001_03.swc";
+	private String root;
+	private String srcDir;
+
+	private String transformH5Path;
+	private String targetPath;
+	private String fcwbPath;
+	private String ptsPath;
 
 	private String baseDataset = "/registration";
 	private N5ZarrWriter zarr;
@@ -79,12 +84,20 @@ public class BijectiveRegistrationExample {
 	private ArrayList<CoordinateTransform<?>> transforms;
 
 	public static void main(String[] args) throws Exception {
-		new BijectiveRegistrationExample().run();
+		new BijectiveRegistrationExample( args[0], args[1]).run();
 	}
 
-	public BijectiveRegistrationExample() {
+	public BijectiveRegistrationExample( String root, String srcDir ) {
 		spaces = new Spaces();
 		transforms = new ArrayList<>();
+
+		this.root = root + File.separator;
+		this.srcDir = srcDir;
+
+		transformH5Path = srcDir + File.separator + "JRC2018F_FCWB_small.h5";
+		targetPath = srcDir + File.separator + "JRC2018_FEMALE_small.tif";
+		fcwbPath = srcDir + File.separator + "FCWB_small.tif";
+		ptsPath = srcDir + File.separator + "GadMARCM-F000122_seg001_03.swc";
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -94,8 +107,8 @@ public class BijectiveRegistrationExample {
 		gsonBuilder.registerTypeAdapter(CoordinateTransform.class, new CoordinateTransformAdapter(null));
 		zarr = new N5ZarrWriter(root, gsonBuilder );
 
-//		makeData();
-//		makeTransform();
+		makeData();
+		makeTransform();
 //		makePoints();
 
 		final String tgtDataset = baseDataset + "/jrc2018F";
@@ -175,13 +188,10 @@ public class BijectiveRegistrationExample {
 
 		zarr.setAttribute(baseDataset, "spaces", spaces.spaces().toArray( Space[]::new ));
 
-//		CoordinateTransform[] transformArr = new CoordinateTransform[ transforms.size()];
-//		for( int i = 0; i < transforms.size(); i++ ) {
-//			transformArr[ i ] = transforms.get( i );
-//		}
-//		zarr.setAttribute(baseDataset, "transformations", transformArr );
+//		zarr.setAttribute(baseDataset, "transformations", new CoordinateTransform[]{ fwdTransform, invTransform } );
 
-		zarr.setAttribute(baseDataset, "transformations", new CoordinateTransform[]{ fwdTransform, invTransform } );
+		BijectionCoordinateTransform bct = new BijectionCoordinateTransform("jrc2018F<>fcwb", "jrc2018F", "fcwb", fwdTransform, invTransform);
+		zarr.setAttribute(baseDataset, "transformations", new CoordinateTransform[]{ bct } );
 
 		return affine;
 	}
@@ -208,7 +218,7 @@ public class BijectiveRegistrationExample {
 
 		ImagePlus tgt = IJ.openImage(targetPath);
 		toN5( "jrc2018F", tgt);
-		
+
 		ImagePlus fcwb = IJ.openImage(fcwbPath);
 		toN5( "fcwb", fcwb);
 	}

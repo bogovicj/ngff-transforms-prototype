@@ -16,6 +16,14 @@ public class BijectionCoordinateTransform extends AbstractCoordinateTransform<Ex
 		this.inverse = inverse;
 	}
 
+	public RealCoordinateTransform<?> getForward() {
+		return forward;
+	}
+
+	public RealCoordinateTransform<?> getInverse() {
+		return inverse;
+	}
+
 	@Override
 	public ExplicitInvertibleRealTransform getTransform()
 	{

@@ -66,6 +66,10 @@ public class CoordinateTransformAdapter
 		case("position_field"):
 			out = context.deserialize( jobj, PositionFieldCoordinateTransform.class );
 			break;
+		case("bijection"):
+			out = context.deserialize( jobj, BijectionCoordinateTransform.class );
+
+			break;
 		case("sequence"):
 			// don't like that this is necessary
 			// in the future, look into RuntimeTypeAdapterFactory in gson-extras
@@ -129,6 +133,21 @@ public class CoordinateTransformAdapter
 			}
 			JsonObject obj =  (JsonObject) context.serialize(src);
 			obj.add("transformations", xfms);
+			elem = obj;
+		}
+		else if( src instanceof BijectionCoordinateTransform )
+		{
+			BijectionCoordinateTransform bct = (BijectionCoordinateTransform)src;
+			JsonObject obj =  (JsonObject) context.serialize(src);
+
+			RealCoordinateTransform<?> fwd = bct.getForward();
+			Type ftype = TypeToken.of(fwd.getClass()).getType();
+			obj.add("forward", serialize( fwd, ftype, context ));
+
+			RealCoordinateTransform<?> inv = bct.getInverse();
+			Type itype = TypeToken.of(inv.getClass()).getType();
+			obj.add("inverse", serialize( inv, itype, context ));
+
 			elem = obj;
 		}
 		else

@@ -4,7 +4,7 @@ import org.janelia.saalfeldlab.n5.N5Reader;
 
 import net.imglib2.realtransform.RealTransformSequence;
 
-public class SequenceCoordinateTransform extends AbstractCoordinateTransform<RealTransformSequence> {
+public class SequenceCoordinateTransform extends AbstractCoordinateTransform<RealTransformSequence> implements RealCoordinateTransform<RealTransformSequence> {
 
 	private final RealCoordinateTransform<?>[] transformations;
 
