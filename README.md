@@ -38,7 +38,7 @@ In addition to "array space", there are:
       ]   
     }   
   ],  
-  "transformations": [
+  "coordinateTransformations": [
     {   
       "scale": [ 0.8, 0.8, 2.2 ],
       "type": "scale",
@@ -114,7 +114,7 @@ show( zarr, imgSpace, cropSpace );
       ]
     }
   ],
-  "transformations": [
+  "coordinateTransformations": [
     {
       "scale": [ 2.2, 1.1 ],
       "type": "scale",
