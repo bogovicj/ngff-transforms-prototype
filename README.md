@@ -255,3 +255,195 @@ Both have a single "space" :
 }
 ```
 </details>
+
+### Non-linear registration (bijection)
+
+
+This example has two 3d datasets, and two displacement fields (4d datasets).
+
+* Run [the `BijectiveRegistrationExample` code](https://github.com/bogovicj/ngff-transforms-prototype/blob/main/src/main/java/org/janelia/saalfeldlab/ngff/examples/BijectiveRegistrationExample.java).
+* See [story 8](https://github.com/ome/ngff/issues/84#issuecomment-1026844181).
+
+The example code produces two 3d datasets of different drosophila template brains:
+
+* `/registration/fcwb`
+*  `/registration/jrc2018F`
+
+and two displacement fields:
+
+* `/registration/fwdDfield`
+* `/registration/invDfield`
+
+Notice that both displacement field datasets declare valid spaces and coordinateTransformations, where
+one axis has `type: displacement`, for example:
+
+<details>
+
+<summary><b> the forward displacement field's metadata </b></summary>
+```json
+{
+  "spaces": [
+    {
+      "name": "forwardDfield",
+      "axes": [
+        { "type": "displacement", "label": "d", "unit": "um", "discrete": false },
+        { "type": "space", "label": "fwd-x", "unit": "um", "discrete": false },
+        { "type": "space", "label": "fwd-y", "unit": "um", "discrete": false },
+        { "type": "space", "label": "fwd-z", "unit": "um", "discrete": false }
+      ]
+    }
+  ],
+  "transformations": [
+    {
+      "scale": [ 1.76, 1.76, 1.76 ],
+      "type": "scale",
+      "name": "fwdDfieldScale",
+      "input_space": "",
+      "output_space": "fwdDfield"
+    }
+  ]
+}
+```
+
+</details>
+
+The total forward transform consists of the `fowardDfield` followed by an affine.  The total inverse transform consists of the affine's inverse, followed by `inverseDfield`.  These two sequences are inverses of each other and are wrapped as a `bijection` coordinate transformation. 
+
+<details>
+<summary><b>The associated multiscale metadata in `/multiscales/avg`</b></summary>
+
+```json
+  {
+  "multiscales": [
+    {
+      "version": "0.5-prototype",
+      "name": "ms_avg",
+      "type": "averaging",
+      "metadata": null,
+      "datasets": [
+        {
+          "path": "/multiscales/avg/s0",
+          "coordinateTransformations": [
+            {
+              "scale": [ 2.2, 3.3 ],
+              "type": "scale",
+              "name": "s0-to-physical",
+              "input_space": "",
+              "output_space": "physical"
+            }
+          ]
+        },
+        {
+          "path": "/multiscales/avg/s1",
+          "coordinateTransformations": [
+            {
+              "transformations": [
+                { "scale": [ 4.4, 6.6 ], "type": "scale" },
+                { "translation": [ 1.1, 1.65 ], "type": "translation" }
+              ],
+              "type": "sequence",
+              "name": "s1-to-physical",
+              "input_space": "",
+              "output_space": "physical"
+            }
+          ]
+        },
+        {
+          "path": "/multiscales/avg/s2",
+          "coordinateTransformations": [
+            {
+              "transformations": [
+                { "scale": [ 8.8, 13.2 ], "type": "scale" },
+                { "translation": [ 3.3, 4.95 ], "type": "translation" }
+              ],
+              "type": "sequence",
+              "name": "s2-to-physical",
+              "input_space": "",
+              "output_space": "physical"
+            }
+          ]
+        }
+      ],
+      "spaces": [
+        {
+          "name": "physical",
+          "axes": [
+            { "type": "space", "label": "x", "unit": "um", "discrete": false },
+            { "type": "space", "label": "y", "unit": "um", "discrete": false }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+</details>
+  
+<details>
+<summary><b>The single-scale metadata in `/multiscales/avg/s2`</b></summary>
+
+```json
+{
+  "spaces": [
+    {
+      "name": "fcwb",
+      "axes": [
+        { "type": "space", "label": "fcwb-x", "unit": "um", "discrete": false },
+        { "type": "space", "label": "fcwb-y", "unit": "um", "discrete": false },
+        { "type": "space", "label": "fcwb-z", "unit": "um", "discrete": false }
+      ]
+    },
+    {
+      "name": "jrc2018F",
+      "axes": [
+        { "type": "space", "label": "jrc2018F-x", "unit": "um", "discrete": false },
+        { "type": "space", "label": "jrc2018F-y", "unit": "um", "discrete": false },
+        { "type": "space", "label": "jrc2018F-z", "unit": "um", "discrete": false }
+      ]
+    }
+  ],
+  "coordinateTransformations": [
+    {
+      "forward": {
+        "transformations": [
+          {
+            "path": "/registration/fwdDfield",
+            "type": "displacement_field"
+          },
+          {
+            "affine": [ 0.907875, 0.00299018, 0.00779285, -3.77146, -0.000121014, 1.04339, 0.0893289, -6.39702, 0.000127526, -0.0138092, 0.549687, 2.9986 ],
+            "type": "affine"
+          }
+        ],
+        "type": "sequence",
+        "name": "jrc2018F-to-fcwb",
+        "input_space": "jrc2018F",
+        "output_space": "fcwb"
+      },
+      "inverse": {
+        "transformations": [
+          {
+            "affine": [ 1.1014748899286995, -0.003356093187801388, -0.015070089856986017, 4.177888664571422, 0.00014930742384645888, 0.9563570184920926, -0.1554184181171034, 6.584435749976974, -0.00025178851007148946, 0.024026315573955494, 1.8153162032371448, -5.290659956068192 ],
+            "type": "affine"
+          },
+          {
+            "path": "/registration/invDfield",
+            "type": "displacement_field"
+          }
+        ],
+        "type": "sequence",
+        "name": "fcwb-to-jrc2018F",
+        "input_space": "fcwb",
+        "output_space": "jrc2018F"
+      },
+      "type": "bijection",
+      "name": "jrc2018F<>fcwb",
+      "input_space": "jrc2018F",
+      "output_space": "fcwb"
+    }
+  ]
+}
+
+```
+  
+</details>
