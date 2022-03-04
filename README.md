@@ -141,3 +141,117 @@ show( zarr, imgSpace, cropSpace );
 ```
   
 </details>
+
+### Multiscale
+
+This example has two 2d multiscale-datasets.
+
+* Run [this `MultiscaleExample` code](https://github.com/bogovicj/ngff-transforms-prototype/blob/main/src/main/java/org/janelia/saalfeldlab/ngff/examples/MultiscaleExample.java).
+* See [story 8](https://github.com/ome/ngff/issues/84#issuecomment-1026844181).
+
+The example code produces two multiscale groups:
+* `/multiscales/sample` - downsampling performed by sampling
+* `/multiscales/avg`  - downsampling performed by averaging
+
+Both have a single "space" : 
+* "physical" - the space in microns the full resolution and all downsampled versions relate to
+
+<details>
+<summary><b>The associated multiscale metadata in `/multiscales/avg`</b></summary>
+
+```json
+  {
+  "multiscales": [
+    {
+      "version": "0.5-prototype",
+      "name": "ms_avg",
+      "type": "averaging",
+      "metadata": null,
+      "datasets": [
+        {
+          "path": "/multiscales/avg/s0",
+          "coordinateTransformations": [
+            {
+              "scale": [ 2.2, 3.3 ],
+              "type": "scale",
+              "name": "s0-to-physical",
+              "input_space": "",
+              "output_space": "physical"
+            }
+          ]
+        },
+        {
+          "path": "/multiscales/avg/s1",
+          "coordinateTransformations": [
+            {
+              "transformations": [
+                { "scale": [ 4.4, 6.6 ], "type": "scale" },
+                { "translation": [ 1.1, 1.65 ], "type": "translation" }
+              ],
+              "type": "sequence",
+              "name": "s1-to-physical",
+              "input_space": "",
+              "output_space": "physical"
+            }
+          ]
+        },
+        {
+          "path": "/multiscales/avg/s2",
+          "coordinateTransformations": [
+            {
+              "transformations": [
+                { "scale": [ 8.8, 13.2 ], "type": "scale" },
+                { "translation": [ 3.3, 4.95 ], "type": "translation" }
+              ],
+              "type": "sequence",
+              "name": "s2-to-physical",
+              "input_space": "",
+              "output_space": "physical"
+            }
+          ]
+        }
+      ],
+      "spaces": [
+        {
+          "name": "physical",
+          "axes": [
+            { "type": "space", "label": "x", "unit": "um", "discrete": false },
+            { "type": "space", "label": "y", "unit": "um", "discrete": false }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+</details>
+  
+<details>
+<summary><b>The single-scale metadata in `/multiscales/avg/s2`</b></summary>
+
+```json
+{
+  "spaces": [
+    {
+      "name": "physical",
+      "axes": [
+        { "type": "space", "label": "x", "unit": "um", "discrete": false },
+        { "type": "space", "label": "y", "unit": "um", "discrete": false }
+      ]
+    }
+  ],
+  "coordinateTransformations": [
+    {
+      "transformations": [
+        { "scale": [ 8.8, 13.2 ], "type": "scale" },
+        { "translation": [ 3.3, 4.95 ], "type": "translation", }
+      ],
+      "type": "sequence",
+      "name": "s2-to-physical",
+      "input_space": "",
+      "output_space": "physical"
+    }
+  ]
+}
+```
+</details>
