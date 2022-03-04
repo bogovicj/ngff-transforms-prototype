@@ -67,8 +67,17 @@ public class CoordinateTransformAdapter
 			out = context.deserialize( jobj, PositionFieldCoordinateTransform.class );
 			break;
 		case("bijection"):
-			out = context.deserialize( jobj, BijectionCoordinateTransform.class );
 
+			final JsonObject btmp = context.deserialize( jobj, JsonObject.class );
+			final IdentityCoordinateTransform bid = context.deserialize( btmp, IdentityCoordinateTransform.class );
+			if( !btmp.has("forward") && !btmp.has("inverse")) {
+				out = null;
+			}
+			else {
+				RealCoordinateTransform<?> fwd = context.deserialize( btmp.get("forward"), CoordinateTransform.class );
+				RealCoordinateTransform<?> inv = context.deserialize( btmp.get("inverse"), CoordinateTransform.class );
+				out = new BijectionCoordinateTransform(bid.getName(), bid.getInputSpace(), bid.getOutputSpace(), fwd, inv );
+			}
 			break;
 		case("sequence"):
 			// don't like that this is necessary

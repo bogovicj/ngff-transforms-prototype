@@ -68,7 +68,7 @@ public class MultiscaleExample {
 		System.out.println( "make base image" );
 		Common.render(img, pts.limit(80), r );
 
-		buildMultiscales(img, zarr, baseDataset + "/sample", 3, false);
+//		buildMultiscales(img, zarr, baseDataset + "/sample", 3, false);
 		buildMultiscales(img, zarr, baseDataset + "/avg", 3, true);
 		
 //		show(zarr, "/multiscales/sample");
@@ -139,7 +139,8 @@ public class MultiscaleExample {
 		final int[] blkSize = new int[ imgBase.numDimensions()];
 		Arrays.fill(blkSize, 64);
 
-		Scale df = new Scale( 2, 2 );	
+		Scale df = new Scale( 2, 2 );
+		Scale factors = new Scale( 1, 1 );
 		double sx = 2.2;
 		double sy = 3.3;
 		Scale s = new Scale( sx, sy ); // s0 to physical
@@ -155,11 +156,19 @@ public class MultiscaleExample {
 			ScaleCoordinateTransform scale = new ScaleCoordinateTransform(si+"-to-physical", "", spaceName, s.getScaleCopy());
 			if( avg )
 			{
-				double[] xlation = new double[] { sx * ((df.getScale(0) - 1)/ 2), sy * (df.getScale(1) - 1)/ 2 };
-				TranslationCoordinateTransform xlationct = new TranslationCoordinateTransform("", "", "", xlation);
+				if( i > 0 )
+				{
+					double[] xlation = new double[] { sx * ((factors.getScale(0) - 1)/ 2), sy * (factors.getScale(1) - 1)/ 2 };
+					TranslationCoordinateTransform xlationct = new TranslationCoordinateTransform("", "", "", xlation);
+					System.out.println( "xlation: " + Arrays.toString(xlation));
 
-				t = new SequenceCoordinateTransform(si + "-to-physical", "", spaceName,
-						new RealCoordinateTransform[]{ scale, xlationct});
+					t = new SequenceCoordinateTransform(si + "-to-physical", "", spaceName,
+							new RealCoordinateTransform[]{ scale, xlationct});
+				}
+				else
+				{
+					t = scale;
+				}
 			}
 			else {
 				t = scale;
@@ -168,6 +177,7 @@ public class MultiscaleExample {
 			datasets[i] = new DatasetTransform(dset, t );
 					
 			s.preConcatenate(df);
+			factors.preConcatenate(df);
 			
 			if( spaces != null )
 				n5.setAttribute(dset, "spaces", spaces);
