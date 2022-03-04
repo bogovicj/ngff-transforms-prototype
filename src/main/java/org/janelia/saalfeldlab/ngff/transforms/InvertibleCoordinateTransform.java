@@ -1,11 +1,17 @@
 package org.janelia.saalfeldlab.ngff.transforms;
 
+import org.janelia.saalfeldlab.n5.N5Reader;
+
 import net.imglib2.realtransform.InvertibleRealTransform;
 
 public interface InvertibleCoordinateTransform<T extends InvertibleRealTransform> extends RealCoordinateTransform<T> {
 
 	public default InvertibleRealTransform getInverseTransform() {
 		return getTransform().inverse();
+	}
+
+	public default InvertibleRealTransform getInverseTransform( final N5Reader n5) {
+		return getTransform(n5).inverse();
 	}
 
 }

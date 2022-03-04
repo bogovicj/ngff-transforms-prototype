@@ -1,5 +1,7 @@
 package org.janelia.saalfeldlab.ngff.transforms;
 
+import org.janelia.saalfeldlab.n5.N5Reader;
+
 import net.imglib2.realtransform.ExplicitInvertibleRealTransform;
 
 public class BijectionCoordinateTransform extends AbstractCoordinateTransform<ExplicitInvertibleRealTransform> 
@@ -22,6 +24,12 @@ public class BijectionCoordinateTransform extends AbstractCoordinateTransform<Ex
 
 	public RealCoordinateTransform<?> getInverse() {
 		return inverse;
+	}
+	
+	@Override
+	public ExplicitInvertibleRealTransform getTransform( final N5Reader n5 )
+	{
+		return new ExplicitInvertibleRealTransform(forward.getTransform(n5), inverse.getTransform(n5));
 	}
 
 	@Override

@@ -115,20 +115,20 @@ public class BijectiveRegistrationExample {
 		final String mvgDataset = baseDataset + "/fcwb";
 
 
-//		final RandomAccessibleIntervalSource tgtSrc = Common.openSource(zarr, tgtDataset, "jrc2018F");
-//		final BdvStackSource bdv = BdvFunctions.show( tgtSrc );
-//		final BdvOptions opts = BdvOptions.options().addTo(bdv);
-//		final Interval itvl = tgtSrc.getSource(0, 0);
-//
-//		final String space = "jrc2018F";
-//		Common.show(zarr, mvgDataset, baseDataset, space, itvl, opts);
-		
-		
-		final RandomAccessibleIntervalSource mvgSrc = Common.openSource(zarr, mvgDataset, "fcwb");
-		final BdvStackSource bdv = BdvFunctions.show( mvgSrc );
+		final RandomAccessibleIntervalSource tgtSrc = Common.openSource(zarr, tgtDataset, "jrc2018F");
+		final BdvStackSource bdv = BdvFunctions.show( tgtSrc );
 		final BdvOptions opts = BdvOptions.options().addTo(bdv);
-		final Interval itvl = mvgSrc.getSource(0, 0);
-		Common.show(zarr, tgtDataset, baseDataset, "fcwb", itvl, opts);
+		final Interval itvl = tgtSrc.getSource(0, 0);
+
+		final String space = "jrc2018F";
+		Common.show(zarr, mvgDataset, baseDataset, space, itvl, opts);
+		
+		
+//		final RandomAccessibleIntervalSource mvgSrc = Common.openSource(zarr, mvgDataset, "fcwb");
+//		final BdvStackSource bdv = BdvFunctions.show( mvgSrc );
+//		final BdvOptions opts = BdvOptions.options().addTo(bdv);
+//		final Interval itvl = mvgSrc.getSource(0, 0);
+//		Common.show(zarr, tgtDataset, baseDataset, "fcwb", itvl, opts);
 
 		System.out.println("run complete");
 	}
