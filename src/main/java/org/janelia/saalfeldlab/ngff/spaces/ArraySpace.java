@@ -5,18 +5,20 @@ import java.util.stream.IntStream;
 import org.janelia.saalfeldlab.ngff.axes.Axis;
 
 /**
- * A Space is a set of axes.
- *
  * @author John Bogovic
  */
 public class ArraySpace extends Space {
-
+	
 	public ArraySpace() {
 		this( 5 );
 	}
 
 	public ArraySpace( int nd ) {
 		super( "", arrayAxes( nd ));
+	}
+
+	public ArraySpace( String name, int nd ) {
+		super( name, arrayAxes( nd ));
 	}
 
 	public String toString()

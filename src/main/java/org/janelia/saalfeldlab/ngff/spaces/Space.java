@@ -122,6 +122,9 @@ public class Space {
 			if( s.axes.length != axes.length )
 				return false;
 
+			if( !name.equals(s.name))
+				return false;
+
 			for( int i = 0; i < axes.length; i++ )
 				if( !axes[i].getLabel().equals( s.axes[i].getLabel() ))
 					return false;

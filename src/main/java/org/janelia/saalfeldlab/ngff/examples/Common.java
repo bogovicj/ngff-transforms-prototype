@@ -69,6 +69,11 @@ public class Common {
 
 	public static AffineTransform3D toAffine3D( Collection<CoordinateTransform<?>> transforms )
 	{
+		return toAffine3D( null, transforms );
+	}
+
+	public static AffineTransform3D toAffine3D( N5Reader n5, Collection<CoordinateTransform<?>> transforms )
+	{
 		final AffineTransform3D total = new AffineTransform3D();
 		for( CoordinateTransform ct : transforms )
 		{
@@ -83,7 +88,7 @@ public class Common {
 					preConcatenate( total, (AffineGet) t  );
 			}
 			else {
-				Object t = ct.getTransform();
+				Object t = ct.getTransform(n5);
 				if( t instanceof AffineGet )
 				{
 					preConcatenate( total, (AffineGet) t  );
@@ -180,16 +185,15 @@ public class Common {
 		System.out.println( "xfm : " + xfm );
 		return new RandomAccessibleIntervalSource<T>(img, Util.getTypeFromInterval(img), xfm, dataset + " - " + space );	
 	}
-	
+
 	public static <T extends NumericType<T> & NativeType<T>> RandomAccessibleIntervalSource<T> openSource( N5Reader n5, String dataset, TransformGraph graph, String spaceIn ) throws IOException 
 	{
 		String space = spaceIn == null ? "" : spaceIn;
 		final RandomAccessibleInterval<T> img = open( n5 , dataset);
 		final AffineTransform3D xfm = graph.path("", space).get().totalAffine3D();
-		System.out.println("xfm: " + xfm );
 		return new RandomAccessibleIntervalSource<T>(img, Util.getTypeFromInterval(img), xfm, dataset + " - " + space );	
 	}
-	
+
 //	public static <T extends NumericType<T> & NativeType<T>> WarpedSource<T> openWarpedSource( N5Reader n5, String dataset, TransformGraph graph, String spaceIn ) throws IOException 
 //	{
 //		String space = spaceIn == null ? "" : spaceIn;
@@ -276,10 +280,16 @@ public class Common {
 
 	public static TransformGraph buildGraph( N5Reader n5, String dataset, int nd ) throws IOException 
 	{
-		final Space[] spaces = n5.getAttribute(dataset, "spaces", Space[].class);
-		final CoordinateTransform[] transforms = n5.getAttribute(dataset, "transformations", CoordinateTransform[].class);
+		Space[] spaces = n5.getAttribute(dataset, "spaces", Space[].class);
+		if( spaces == null )
+			spaces = n5.getAttribute(dataset, "coordinateSystems", Space[].class);
+
+		CoordinateTransform[] transforms = n5.getAttribute(dataset, "transformations", CoordinateTransform[].class);
+		if( transforms == null )
+			transforms = n5.getAttribute(dataset, "coordinateTransformations", CoordinateTransform[].class);
+
 //		return new TransformGraph( Arrays.asList( transforms ), Arrays.asList(spaces));	
-		return new SpacesTransforms( spaces, transforms ).buildTransformGraph(nd);
+		return new SpacesTransforms( spaces, transforms ).buildTransformGraph(dataset, nd);
 	}
 
 	public static TransformGraph buildGraph( N5Reader n5, String... datasets ) throws IOException 

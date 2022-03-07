@@ -50,12 +50,16 @@ public class SpacesTransforms {
 		return buildSpaces( 0 );
 	}
 	
-	public Spaces buildSpaces( int nd ) {
+	public Spaces buildSpaces( String name, int nd ) {
 		Spaces s = new Spaces( spaces );
 		if( nd > 0 )
-			s.add(new ArraySpace(nd));
+			s.add(new ArraySpace(name, nd));
 		
 		return s;
+	}
+
+	public Spaces buildSpaces( int nd ) {
+		return buildSpaces( "", nd );
 	}
 
 	public TransformGraph buildTransformGraph() {
@@ -63,7 +67,15 @@ public class SpacesTransforms {
 	}
 
 	public TransformGraph buildTransformGraph( int nd ) {
-		return new TransformGraph( Arrays.asList(transforms), buildSpaces( nd ));
+		return buildTransformGraph( "", nd );
+	}
+
+	public TransformGraph buildTransformGraph( String dataset ) {
+		return buildTransformGraph( dataset, 0);
+	}
+
+	public TransformGraph buildTransformGraph( String dataset, int nd ) {
+		return new TransformGraph( Arrays.asList(transforms), buildSpaces( dataset, nd ));
 	}
 
 }

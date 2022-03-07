@@ -27,6 +27,7 @@ import org.janelia.saalfeldlab.ngff.transforms.ParametrizedTransform;
 import org.janelia.saalfeldlab.ngff.transforms.RealCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.ScaleCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.SequenceCoordinateTransform;
+import org.janelia.saalfeldlab.ngff.vis.Vis;
 
 import com.google.gson.GsonBuilder;
 
@@ -113,22 +114,12 @@ public class BijectiveRegistrationExample {
 
 		final String tgtDataset = baseDataset + "/jrc2018F";
 		final String mvgDataset = baseDataset + "/fcwb";
+//		final String space = "jrc2018F"; // try changing to "fcwb", say
+		final String space = "fcwb"; // try chaning to "fcwb", say
 
-
-//		final RandomAccessibleIntervalSource tgtSrc = Common.openSource(zarr, tgtDataset, "jrc2018F");
-//		final BdvStackSource bdv = BdvFunctions.show( tgtSrc );
-//		final BdvOptions opts = BdvOptions.options().addTo(bdv);
-//		final Interval itvl = tgtSrc.getSource(0, 0);
-//
-//		final String space = "jrc2018F";
-//		Common.show(zarr, mvgDataset, baseDataset, space, itvl, opts);
-		
-		
-		final RandomAccessibleIntervalSource mvgSrc = Common.openSource(zarr, mvgDataset, "fcwb");
-		final BdvStackSource bdv = BdvFunctions.show( mvgSrc );
-		final BdvOptions opts = BdvOptions.options().addTo(bdv);
-		final Interval itvl = mvgSrc.getSource(0, 0);
-		Common.show(zarr, tgtDataset, baseDataset, "fcwb", itvl, opts);
+		Vis vis = new Vis( zarr ).addTransforms(baseDataset);
+		BdvStackSource<?> bdv = vis.dataset(tgtDataset).space(space).show();
+		vis.bdvOptions(BdvOptions.options().addTo(bdv)).dataset(mvgDataset).show();
 
 		System.out.println("run complete");
 	}
@@ -186,12 +177,10 @@ public class BijectiveRegistrationExample {
 		transforms.add( fwdTransform );
 		transforms.add( invTransform );
 
-		zarr.setAttribute(baseDataset, "spaces", spaces.spaces().toArray( Space[]::new ));
-
-//		zarr.setAttribute(baseDataset, "transformations", new CoordinateTransform[]{ fwdTransform, invTransform } );
+		zarr.setAttribute(baseDataset, "coordinateSystems", spaces.spaces().toArray( Space[]::new ));
 
 		BijectionCoordinateTransform bct = new BijectionCoordinateTransform("jrc2018F<>fcwb", "jrc2018F", "fcwb", fwdTransform, invTransform);
-		zarr.setAttribute(baseDataset, "transformations", new CoordinateTransform[]{ bct } );
+		zarr.setAttribute(baseDataset, "coordinateTransformations", new CoordinateTransform[]{ bct } );
 
 		return affine;
 	}
@@ -240,11 +229,11 @@ public class BijectiveRegistrationExample {
 				imp.getCalibration().pixelHeight,
 				imp.getCalibration().pixelDepth };
 
-		ScaleCoordinateTransform scale = new ScaleCoordinateTransform("to-" + name, "", name, s );
+		ScaleCoordinateTransform scale = new ScaleCoordinateTransform("to-" + name, dataset, name, s );
 		transforms.add( scale );
 		
-		zarr.setAttribute(dataset, "spaces", new Space[]{ space });
-		zarr.setAttribute(dataset, "transformations", new CoordinateTransform[]{ scale });
+		zarr.setAttribute(dataset, "coordinateSystems", new Space[]{ space });
+		zarr.setAttribute(dataset, "coordinateTransformations", new CoordinateTransform[]{ scale });
 	}
 	
 	

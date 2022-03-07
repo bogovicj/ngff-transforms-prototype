@@ -1,16 +1,21 @@
 package org.janelia.saalfeldlab.ngff.examples;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Stream;
 
 import org.janelia.saalfeldlab.n5.GzipCompression;
 import org.janelia.saalfeldlab.n5.imglib2.N5Utils;
 import org.janelia.saalfeldlab.n5.zarr.N5ZarrWriter;
 import org.janelia.saalfeldlab.ngff.graph.TransformGraph;
+import org.janelia.saalfeldlab.ngff.graph.TransformPath;
+import org.janelia.saalfeldlab.ngff.spaces.ArraySpace;
 import org.janelia.saalfeldlab.ngff.spaces.Space;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransformAdapter;
 import org.janelia.saalfeldlab.ngff.transforms.ScaleCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.TranslationCoordinateTransform;
+import org.janelia.saalfeldlab.ngff.vis.Vis;
 
 import com.google.gson.GsonBuilder;
 
@@ -39,12 +44,21 @@ public class CropExample {
 		gsonBuilder.registerTypeAdapter(CoordinateTransform.class, new CoordinateTransformAdapter(null));
 		final N5ZarrWriter zarr = new N5ZarrWriter(root, gsonBuilder );
 
-		makeData( zarr );
+//		makeData( zarr );
 
 		// Try changing one or both of these to the empty string and see what happens
-		final String imgSpace = "";
-		final String cropSpace = "crop-offset";
-		show( zarr, imgSpace, cropSpace );
+		final String imgSpace = "physical";
+		final String cropSpace = "physical";
+
+		Vis vis = new Vis(zarr).bdvOptions(BdvOptions.options().is2D());
+
+		// show whole image
+		BdvStackSource<?> bdv = vis.dataset(imgDataset).space(imgSpace).show();
+		bdv.setDisplayRangeBounds(0, 255);
+		
+		// show crop
+		vis.bdvOptions( x -> x.addTo(bdv)).dataset(imgCropDataset).space(cropSpace).show()
+			.setDisplayRange(0, 255);
 
 		zarr.close();
 	}
@@ -54,26 +68,24 @@ public class CropExample {
 		FinalInterval itvl = new FinalInterval( 128, 128 );
 		FinalInterval cropitvl = Intervals.createMinMax( 10, 12, 73, 75 );
 
-		final Space[] spaces = new Space[] {
-				Common.makeSpace("um", "space", "micrometer", "y", "z"),
-				Common.makeSpace("crop-offset", "space", "pixels", "cj", "ci"),
-				Common.makeSpace("crop-um", "space", "micrometer", "cy", "cz")
-		};
+		Space si = new ArraySpace(imgDataset, 2);
+		Space sci = new ArraySpace(imgCropDataset, 2);
+		Space cp = Common.makeSpace("physical", "space", "micrometer", "x", "y");
+		Space scp = Common.makeSpace("crop-physical", "space", "micrometer", "cx", "cy");
 
-		final CoordinateTransform[] transforms = new CoordinateTransform[] {
-				new ScaleCoordinateTransform( "to-um", "", "um", new double[]{2.2, 1.1}),
-				new ScaleCoordinateTransform( "crop-to-um", "crop-offset", "crop-um", new double[]{2.2, 1.1}),
-				new TranslationCoordinateTransform( "offset", "", "crop-offset", new double[]{10, 12})
-		};
+		ScaleCoordinateTransform tp = new ScaleCoordinateTransform( "to-physical", imgDataset, "physical", new double[]{2.2, 1.1});
+		ScaleCoordinateTransform tcp = new ScaleCoordinateTransform( "to-crop-physical", imgCropDataset, "crop-physical", new double[]{2.2, 1.1});
+		TranslationCoordinateTransform to = new TranslationCoordinateTransform( "offset", imgCropDataset, imgDataset, new double[]{10, 12});
+		
+		Space[] cSystems = new Space[]{si, sci, cp, scp };
+		CoordinateTransform<?>[] cTransforms = new CoordinateTransform[]{ tp, tcp, to };
 
-		if( ! zarr.datasetExists( imgDataset ) || ! zarr.datasetExists( imgCropDataset ))
-		{
-			makeDatasets( zarr, imgDataset, itvl, null, null );
-			makeDatasets( zarr, imgCropDataset, cropitvl, null, null );
+		makeDatasets( zarr, imgDataset, itvl, cSystems, cTransforms );
+		makeDatasets( zarr, imgCropDataset, cropitvl, cSystems, cTransforms );
 
-			zarr.setAttribute(baseDataset, "spaces", spaces);
-			zarr.setAttribute(baseDataset, "transformations", transforms);
-		}
+
+//		zarr.setAttribute(baseDataset, "coordinateSystems", cSystems);
+//		zarr.setAttribute(baseDataset, "coordinateTransformations", cTransforms);
 	}
 
 	public static void show( N5ZarrWriter zarr, String imgSpace, String cropSpace ) throws IOException 
@@ -88,12 +100,12 @@ public class CropExample {
 		// open and show crop
 		RandomAccessibleIntervalSource<?> srcCrop = Common.openSource(zarr, imgCropDataset, graph, cropSpace );
 		opts = opts.addTo(bdv);
-		BdvFunctions.show(srcCrop, opts);	
+//		return BdvFunctions.show(srcCrop, opts);	
 		bdv.setDisplayRangeBounds(0, 255);
 	}
 	
 	public static void makeDatasets( N5ZarrWriter zarr, String dataset, Interval itvl,
-			Space[] spaces, CoordinateTransform[] transforms ) throws IOException
+			Space[] cSystems, CoordinateTransform<?>[] cTransforms ) throws IOException
 	{
 		final int[] blkSz = new int[]{64, 64};
 		FunctionRandomAccessible<DoubleType> fimg = new FunctionRandomAccessible<>( 2,
@@ -107,11 +119,11 @@ public class CropExample {
 		IntervalView<DoubleType> img = Views.interval( fimg, itvl );
 		N5Utils.save(img, zarr, dataset, blkSz, new GzipCompression());
 
-		if( spaces != null )
-			zarr.setAttribute(dataset, "spaces", spaces);
+		if( cSystems != null )
+			zarr.setAttribute(dataset, "coordinateSystems", cSystems);
 
-		if( transforms != null )
-			zarr.setAttribute(dataset, "transforms", transforms);
+		if( cTransforms != null )
+			zarr.setAttribute(dataset, "coordinateTransformations", cTransforms);
 	}
 
 }

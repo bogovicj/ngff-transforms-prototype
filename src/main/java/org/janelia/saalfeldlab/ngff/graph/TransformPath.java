@@ -96,6 +96,11 @@ public class TransformPath {
 		return total;
 	}
 	
+	public AffineTransform3D totalAffine3D( N5Reader n5 )
+	{
+		return Common.toAffine3D(n5, flatTransforms());
+	}
+
 	public AffineTransform3D totalAffine3D()
 	{
 		return Common.toAffine3D(flatTransforms());

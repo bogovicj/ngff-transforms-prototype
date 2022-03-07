@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.ngff.spaces.Space;
 import org.janelia.saalfeldlab.ngff.spaces.Spaces;
 import org.janelia.saalfeldlab.ngff.transforms.AbstractCoordinateTransform;
@@ -310,6 +311,16 @@ public class TransformGraph
 		public InvertibleRealTransform getInverseTransform() {
 			return ict.getTransform();
 		} 
+
+		@Override
+		public InvertibleRealTransform getTransform( N5Reader n5 ) {
+			return ict.getInverseTransform( n5 );
+		}
+
+		@Override
+		public InvertibleRealTransform getInverseTransform( N5Reader n5 ) {
+			return ict.getTransform( n5 );
+		}
 	}
 	
 }
