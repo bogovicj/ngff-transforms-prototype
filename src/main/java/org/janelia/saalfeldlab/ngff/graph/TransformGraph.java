@@ -308,6 +308,11 @@ public class TransformGraph
 		} 
 
 		@Override
+		public InvertibleRealTransform getTransform( final N5Reader n5 ) {
+			return ict.getInverseTransform( n5 );
+		} 
+
+		@Override
 		public InvertibleRealTransform getInverseTransform() {
 			return ict.getTransform();
 		} 
