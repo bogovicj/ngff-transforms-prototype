@@ -309,78 +309,9 @@ one axis has `type: displacement`, for example:
 
 The total forward transform consists of the `fowardDfield` followed by an affine.  The total inverse transform consists of the affine's inverse, followed by `inverseDfield`.  These two sequences are inverses of each other and are wrapped as a `bijection` coordinate transformation. 
 
-<details>
-<summary><b>The associated multiscale metadata in `/multiscales/avg`</b></summary>
-
-```json
-  {
-  "multiscales": [
-    {
-      "version": "0.5-prototype",
-      "name": "ms_avg",
-      "type": "averaging",
-      "metadata": null,
-      "datasets": [
-        {
-          "path": "/multiscales/avg/s0",
-          "coordinateTransformations": [
-            {
-              "scale": [ 2.2, 3.3 ],
-              "type": "scale",
-              "name": "s0-to-physical",
-              "input_space": "",
-              "output_space": "physical"
-            }
-          ]
-        },
-        {
-          "path": "/multiscales/avg/s1",
-          "coordinateTransformations": [
-            {
-              "transformations": [
-                { "scale": [ 4.4, 6.6 ], "type": "scale" },
-                { "translation": [ 1.1, 1.65 ], "type": "translation" }
-              ],
-              "type": "sequence",
-              "name": "s1-to-physical",
-              "input_space": "",
-              "output_space": "physical"
-            }
-          ]
-        },
-        {
-          "path": "/multiscales/avg/s2",
-          "coordinateTransformations": [
-            {
-              "transformations": [
-                { "scale": [ 8.8, 13.2 ], "type": "scale" },
-                { "translation": [ 3.3, 4.95 ], "type": "translation" }
-              ],
-              "type": "sequence",
-              "name": "s2-to-physical",
-              "input_space": "",
-              "output_space": "physical"
-            }
-          ]
-        }
-      ],
-      "spaces": [
-        {
-          "name": "physical",
-          "axes": [
-            { "type": "space", "label": "x", "unit": "um", "discrete": false },
-            { "type": "space", "label": "y", "unit": "um", "discrete": false }
-          ]
-        }
-      ]
-    }
-  ]
-}
-```
-</details>
   
 <details>
-<summary><b>The single-scale metadata in `/multiscales/avg/s2`</b></summary>
+<summary><b>The registration metadata</b></summary>
 
 ```json
 {
