@@ -37,11 +37,6 @@ public class BijectionCoordinateTransform extends AbstractCoordinateTransform<Ex
 	{
 		return new ExplicitInvertibleRealTransform(forward.getTransform(), inverse.getTransform());
 	}
-	
-	@Override
-	public ExplicitInvertibleRealTransform getTransform(N5Reader n5)
-	{
-		return new ExplicitInvertibleRealTransform(forward.getTransform(n5), inverse.getTransform(n5));
-	}
+
 
 }

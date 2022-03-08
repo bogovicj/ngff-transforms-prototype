@@ -14,8 +14,4 @@ public interface InvertibleCoordinateTransform<T extends InvertibleRealTransform
 		return getTransform().inverse();
 	}
 
-	public default InvertibleRealTransform getInverseTransform( final N5Reader n5) {
-		return getTransform(n5).inverse();
-	}
-
 }
