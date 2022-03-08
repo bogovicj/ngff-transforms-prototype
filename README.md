@@ -276,9 +276,9 @@ and two displacement fields:
 
 The spaces and transformations are related like this:
 
-```
-/registration/fcwb <-toFcwb-> fwcb <-"jrc2018F-to-fcwb"-> jrc2018F <-toJrc2018F-> /registration/jrc2018F
-```
+<pre>
+ <b>/registration/jrc2018F</b> <-toJrc2018F->  <b>jrc2018F</b> <-"jrc2018F-to-fcwb"->  <b>fwcb</b> <-toFcwb-> <b>/registration/fcwb</b>
+</pre>
 
 where `A <-T-> B` indidcates an invertible transformation (named `T`) between spaces `A` and `B`.
 
