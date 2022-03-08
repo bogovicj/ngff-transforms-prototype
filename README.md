@@ -43,7 +43,7 @@ In addition to "array space", there are:
       "scale": [ 0.8, 0.8, 2.2 ],
       "type": "scale",
       "name": "to-mm",
-      "input_space": "", 
+      "input_space": "/basic/mri",
       "output_space": "scanner"
     },  
     {   
@@ -60,7 +60,9 @@ In addition to "array space", there are:
 
 ### Crop
 
-This example has two 2d datasets, one of which is a cropped version (strict subset) of the other. 
+This example has two 2d datasets, 
+* `img2d` - some 2d image
+* `img2dcrop` a cropped / offset copy of the above 
 
 * Run [this code](https://github.com/bogovicj/ngff-transforms-prototype/blob/main/src/main/java/org/janelia/saalfeldlab/ngff/examples/CropExample.java).
 * See [story 2](https://github.com/ome/ngff/issues/84#issue-1116712463).
@@ -95,46 +97,46 @@ show( zarr, imgSpace, cropSpace );
     {
       "name": "um",
       "axes": [
-        { "type": "space", "label": "y", "unit": "micrometer", "discrete": false },
-        { "type": "space", "label": "z", "unit": "micrometer", "discrete": false }
+        { "type": "space", "label": "x", "unit": "micrometer", "discrete": false },
+        { "type": "space", "label": "y", "unit": "micrometer", "discrete": false }
       ]
     },
     {
       "name": "crop-offset",
       "axes": [
-        { "type": "space", "label": "cj", "unit": "pixels", "discrete": false },
-        { "type": "space", "label": "ci", "unit": "pixels", "discrete": false }
+        { "type": "space", "label": "ci", "unit": "", "discrete": true },
+        { "type": "space", "label": "cj", "unit": "", "discrete": true }
       ]
     },
     {
       "name": "crop-um",
       "axes": [
-        { "type": "space", "label": "cy", "unit": "micrometer", "discrete": false },
-        { "type": "space", "label": "cz", "unit": "micrometer", "discrete": false }
+        { "type": "space", "label": "cx", "unit": "micrometer", "discrete": false },
+        { "type": "space", "label": "cy", "unit": "micrometer", "discrete": false }
       ]
     }
   ],
   "coordinateTransformations": [
     {
-      "scale": [ 2.2, 1.1 ],
+      "name": "to-physical",
       "type": "scale",
-      "name": "to-um",
-      "input_space": "",
-      "output_space": "um"
+      "scale": [ 2.2, 1.1 ],
+      "input_space": "/crop/img2d",
+      "output_space": "physical"
     },
     {
-      "scale": [ 2.2, 1.1 ],
+      "name": "to-crop-physical",
       "type": "scale",
-      "name": "crop-to-um",
-      "input_space": "crop-offset",
-      "output_space": "crop-um"
+      "scale": [ 2.2, 1.1 ],
+      "input_space": "/crop/img2dcrop",
+      "output_space": "crop-physical"
     },
     {
-      "translation": [ 10, 12 ],
-      "type": "translation",
       "name": "offset",
-      "input_space": "",
-      "output_space": "crop-offset"
+      "type": "translation",
+      "translation": [ 10, 12 ],
+      "input_space": "/crop/img2dcrop",
+      "output_space": "/crop/img2d"
     }
   ]
 }
@@ -166,7 +168,6 @@ Both have a single "space" :
       "version": "0.5-prototype",
       "name": "ms_avg",
       "type": "averaging",
-      "metadata": null,
       "datasets": [
         {
           "path": "/multiscales/avg/s0",
@@ -175,7 +176,7 @@ Both have a single "space" :
               "scale": [ 2.2, 3.3 ],
               "type": "scale",
               "name": "s0-to-physical",
-              "input_space": "",
+              "input_space": "/multiscales/avg/s0",
               "output_space": "physical"
             }
           ]
@@ -190,7 +191,7 @@ Both have a single "space" :
               ],
               "type": "sequence",
               "name": "s1-to-physical",
-              "input_space": "",
+              "input_space": "/multiscales/avg/s1",
               "output_space": "physical"
             }
           ]
@@ -205,7 +206,7 @@ Both have a single "space" :
               ],
               "type": "sequence",
               "name": "s2-to-physical",
-              "input_space": "",
+              "input_space": "/multiscales/avg/s2",
               "output_space": "physical"
             }
           ]
@@ -248,7 +249,7 @@ Both have a single "space" :
       ],
       "type": "sequence",
       "name": "s2-to-physical",
-      "input_space": "",
+      "input_space": "/multiscales/avg/s2",
       "output_space": "physical"
     }
   ]
@@ -258,7 +259,6 @@ Both have a single "space" :
 
 ### Non-linear registration (bijection)
 
-
 This example has two 3d datasets, and two displacement fields (4d datasets).
 
 * Run [the `BijectiveRegistrationExample` code](https://github.com/bogovicj/ngff-transforms-prototype/blob/main/src/main/java/org/janelia/saalfeldlab/ngff/examples/BijectiveRegistrationExample.java).
@@ -267,12 +267,20 @@ This example has two 3d datasets, and two displacement fields (4d datasets).
 The example code produces two 3d datasets of different drosophila template brains:
 
 * `/registration/fcwb`
-*  `/registration/jrc2018F`
+* `/registration/jrc2018F`
 
 and two displacement fields:
 
 * `/registration/fwdDfield`
 * `/registration/invDfield`
+
+The spaces and transformations are related like this:
+
+```
+/registration/fcwb <-toFcwb-> fwcb <-"jrc2018F-to-fcwb"-> jrc2018F <-toJrc2018F-> /registration/jrc2018F
+```
+
+where `A <-T-> B` indidcates an invertible transformation (named `T`) between spaces `A` and `B`.
 
 Notice that both displacement field datasets declare valid spaces and coordinateTransformations, where
 one axis has `type: displacement`, for example:
@@ -286,10 +294,10 @@ one axis has `type: displacement`, for example:
     {
       "name": "forwardDfield",
       "axes": [
-        { "type": "displacement", "label": "d", "unit": "um", "discrete": false },
-        { "type": "space", "label": "fwd-x", "unit": "um", "discrete": false },
-        { "type": "space", "label": "fwd-y", "unit": "um", "discrete": false },
-        { "type": "space", "label": "fwd-z", "unit": "um", "discrete": false }
+        { "type": "displacement", "label": "d", "unit": "", "discrete": true },
+        { "type": "space", "label": "x", "unit": "um", "discrete": false },
+        { "type": "space", "label": "y", "unit": "um", "discrete": false },
+        { "type": "space", "label": "z", "unit": "um", "discrete": false }
       ]
     }
   ],
@@ -298,7 +306,7 @@ one axis has `type: displacement`, for example:
       "scale": [ 1.76, 1.76, 1.76 ],
       "type": "scale",
       "name": "fwdDfieldScale",
-      "input_space": "",
+      "input_space": "/registration/fwdDfield",
       "output_space": "fwdDfield"
     }
   ]
@@ -374,7 +382,6 @@ The total forward transform consists of the `fowardDfield` followed by an affine
     }
   ]
 }
-
 ```
   
 </details>
