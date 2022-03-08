@@ -11,10 +11,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.janelia.saalfeldlab.n5.N5Reader;
+import org.janelia.saalfeldlab.n5.bdv.N5Source;
 import org.janelia.saalfeldlab.n5.imglib2.N5Utils;
 import org.janelia.saalfeldlab.ngff.SpacesTransforms;
 import org.janelia.saalfeldlab.ngff.axes.Axis;
 import org.janelia.saalfeldlab.ngff.graph.TransformGraph;
+import org.janelia.saalfeldlab.ngff.multiscales.DatasetTransform;
+import org.janelia.saalfeldlab.ngff.multiscales.Multiscale;
 import org.janelia.saalfeldlab.ngff.spaces.Space;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.IdentityCoordinateTransform;
@@ -192,6 +195,34 @@ public class Common {
 		final RandomAccessibleInterval<T> img = open( n5 , dataset);
 		final AffineTransform3D xfm = graph.path("", space).get().totalAffine3D();
 		return new RandomAccessibleIntervalSource<T>(img, Util.getTypeFromInterval(img), xfm, dataset + " - " + space );	
+	}
+	
+	public static <T extends RealType<T> & NativeType<T>> N5Source<T> openMultiscaleSource( N5Reader n5, String base ) throws IOException
+	{
+		final Multiscale[] multiscales = n5.getAttribute(base, "multiscales", Multiscale[].class );
+		final Multiscale ms = multiscales[0];
+		
+		int N = ms.datasets.length;
+		final RandomAccessibleInterval<T>[] images = new RandomAccessibleInterval[ N ];
+		final AffineTransform3D[] transforms = new AffineTransform3D[ N ];
+
+		int i = 0 ;
+		for( DatasetTransform d : ms.datasets )
+		{
+			RandomAccessibleInterval<T> img = N5Utils.open(n5, d.path);
+			if( img.numDimensions() == 2 )
+				img = Views.addDimension(img, 0, 0 );
+
+			images[i] = img;
+			transforms[i] = Common.toAffine3D(Arrays.asList(d.coordinateTransformations));
+
+			System.out.println( d.path );
+			System.out.println( transforms[i]);
+
+			i++;
+		}
+
+		return new N5Source<T>(Util.getTypeFromInterval(images[0]), base, images, transforms);
 	}
 
 //	public static <T extends NumericType<T> & NativeType<T>> WarpedSource<T> openWarpedSource( N5Reader n5, String dataset, TransformGraph graph, String spaceIn ) throws IOException 

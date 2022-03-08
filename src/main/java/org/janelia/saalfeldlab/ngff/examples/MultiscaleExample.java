@@ -1,7 +1,6 @@
 package org.janelia.saalfeldlab.ngff.examples;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
@@ -10,9 +9,7 @@ import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5Writer;
 import org.janelia.saalfeldlab.n5.bdv.N5Source;
 import org.janelia.saalfeldlab.n5.imglib2.N5Utils;
-import org.janelia.saalfeldlab.n5.metadata.MultiscaleDatasetsTemplate;
 import org.janelia.saalfeldlab.n5.zarr.N5ZarrWriter;
-import org.janelia.saalfeldlab.ngff.graph.TransformPath;
 import org.janelia.saalfeldlab.ngff.multiscales.DatasetTransform;
 import org.janelia.saalfeldlab.ngff.multiscales.Multiscale;
 import org.janelia.saalfeldlab.ngff.spaces.Space;
@@ -22,17 +19,16 @@ import org.janelia.saalfeldlab.ngff.transforms.RealCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.ScaleCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.SequenceCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.TranslationCoordinateTransform;
+import org.janelia.saalfeldlab.ngff.vis.Vis;
 
 import com.google.gson.GsonBuilder;
 
 import bdv.util.BdvFunctions;
 import bdv.util.BdvOptions;
 import bdv.util.BdvStackSource;
-import bdv.util.RandomAccessibleIntervalMipmapSource;
 import bdv.util.RandomAccessibleIntervalSource;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
-import net.imglib2.cache.img.CachedCellImg;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgs;
@@ -54,7 +50,7 @@ public class MultiscaleExample {
 
 	public static void main(String[] args) throws IOException {
 
-		final String root = "/home/john/projects/ngff/transformsExamples/data.zarr";
+		final String root = args[0];
 		final String baseDataset = "/multiscales";
 
 		GsonBuilder gsonBuilder = new GsonBuilder();
@@ -68,60 +64,30 @@ public class MultiscaleExample {
 		System.out.println( "make base image" );
 		Common.render(img, pts.limit(80), r );
 
-//		buildMultiscales(img, zarr, baseDataset + "/sample", 3, false);
+		buildMultiscales(img, zarr, baseDataset + "/sample", 3, false);
 		buildMultiscales(img, zarr, baseDataset + "/avg", 3, true);
 		
-//		show(zarr, "/multiscales/sample");
+		show(zarr, "/multiscales/sample");
 		show(zarr, "/multiscales/avg");
 	}
 	
 	public static void show( N5Reader zarr, String d ) throws IOException
 	{
-		// display multiscale
 		BdvOptions opts = BdvOptions.options().is2D();
-		N5Source<?> src = multiscaleSource( zarr, d );
-		BdvStackSource<?> bdv = BdvFunctions.show( src, opts );
-		bdv.setDisplayRangeBounds(0, 255);
-		bdv.setColor(new ARGBType( ARGBType.rgba(255, 128, 128, 255)));
-		opts = opts.addTo(bdv);
+		Vis vis = new Vis( zarr ).bdvOptions(opts).space("physical");
+		BdvStackSource<?> bdvms = vis.dataset(d).show();
+		BdvStackSource<?> bdvs0 = vis.bdvOptions( x -> x.addTo(bdvms)).dataset(d + "/s0").show();
+		BdvStackSource<?> bdvs2 = vis.dataset(d + "/s2").show();
 
-		RandomAccessibleIntervalSource<?> s0Src = Common.openSource(zarr, d + "/s0", "physical");
-		BdvStackSource<?> bdvS0 = BdvFunctions.show( s0Src, opts );
-		bdvS0.setDisplayRangeBounds(0, 255);
-		bdvS0.setColor(new ARGBType( ARGBType.rgba(128, 255, 128, 255)));
-		
-		RandomAccessibleIntervalSource<?> s2Src = Common.openSource(zarr, d + "/s2", "physical");
-		BdvStackSource<?> bdvS2 = BdvFunctions.show( s2Src, opts );
-		bdvS2.setDisplayRangeBounds(0, 255);
-		bdvS2.setColor(new ARGBType( ARGBType.rgba(128, 128, 255, 255)));
-	}
+		bdvms.setDisplayRangeBounds(0, 255);
+		bdvms.setColor(new ARGBType( ARGBType.rgba(255, 128, 128, 255)));
 
-	public static <T extends RealType<T> & NativeType<T>> N5Source<T> multiscaleSource( N5Reader n5, String base ) throws IOException
-	{
-		final Multiscale[] multiscales = n5.getAttribute(base, "multiscales", Multiscale[].class );
-		final Multiscale ms = multiscales[0];
-		
-		int N = ms.datasets.length;
-		final RandomAccessibleInterval<T>[] images = new RandomAccessibleInterval[ N ];
-		final AffineTransform3D[] transforms = new AffineTransform3D[ N ];
+		bdvs0.setDisplayRangeBounds(0, 255);
+		bdvs0.setColor(new ARGBType( ARGBType.rgba(128, 255, 128, 255)));
 
-		int i = 0 ;
-		for( DatasetTransform d : ms.datasets )
-		{
-			RandomAccessibleInterval<T> img = N5Utils.open(n5, d.path);
-			if( img.numDimensions() == 2 )
-				img = Views.addDimension(img, 0, 0 );
+		bdvs2.setDisplayRangeBounds(0, 255);
+		bdvs2.setColor(new ARGBType( ARGBType.rgba(128, 128, 255, 255)));
 
-			images[i] = img;
-			transforms[i] = Common.toAffine3D(Arrays.asList(d.coordinateTransformations));
-
-			System.out.println( d.path );
-			System.out.println( transforms[i]);
-
-			i++;
-		}
-
-		return new N5Source<T>(Util.getTypeFromInterval(images[0]), base, images, transforms);
 	}
 
 	public static <T extends RealType<T> & NativeType<T>> void buildMultiscales( Img<T> imgBase, N5Writer n5, String base, int nScales, boolean avg ) throws IOException
@@ -153,25 +119,25 @@ public class MultiscaleExample {
 			N5Utils.save(img, n5, dset, blkSize, compression);
 			
 			CoordinateTransform<?> t = null;
-			ScaleCoordinateTransform scale = new ScaleCoordinateTransform(si+"-to-physical", "", spaceName, s.getScaleCopy());
 			if( avg )
 			{
 				if( i > 0 )
 				{
+					ScaleCoordinateTransform scale = new ScaleCoordinateTransform("", "", "", s.getScaleCopy());
 					double[] xlation = new double[] { sx * ((factors.getScale(0) - 1)/ 2), sy * (factors.getScale(1) - 1)/ 2 };
 					TranslationCoordinateTransform xlationct = new TranslationCoordinateTransform("", "", "", xlation);
 					System.out.println( "xlation: " + Arrays.toString(xlation));
 
-					t = new SequenceCoordinateTransform(si + "-to-physical", "", spaceName,
+					t = new SequenceCoordinateTransform(si + "-to-physical", dset, spaceName,
 							new RealCoordinateTransform[]{ scale, xlationct});
 				}
 				else
 				{
-					t = scale;
+					t = new ScaleCoordinateTransform(si+"-to-physical", dset, spaceName, s.getScaleCopy());
 				}
 			}
 			else {
-				t = scale;
+				t = new ScaleCoordinateTransform(si+"-to-physical", dset, spaceName, s.getScaleCopy());
 			}
 
 			datasets[i] = new DatasetTransform(dset, t );
@@ -180,10 +146,10 @@ public class MultiscaleExample {
 			factors.preConcatenate(df);
 			
 			if( spaces != null )
-				n5.setAttribute(dset, "spaces", spaces);
+				n5.setAttribute(dset, "coordinateSystems", spaces);
 
 			if( datasets[i] != null )
-				n5.setAttribute(dset, "transformations", datasets[i].coordinateTransformations );
+				n5.setAttribute(dset, "coordinateTransformations", datasets[i].coordinateTransformations );
 
 			if (avg)
 				img = Common.downsampleAvg(img, 2);

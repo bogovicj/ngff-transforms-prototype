@@ -5,10 +5,12 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 import org.janelia.saalfeldlab.n5.N5Reader;
+import org.janelia.saalfeldlab.n5.bdv.N5Source;
 import org.janelia.saalfeldlab.n5.ij.N5Factory;
 import org.janelia.saalfeldlab.ngff.examples.Common;
 import org.janelia.saalfeldlab.ngff.graph.TransformGraph;
 import org.janelia.saalfeldlab.ngff.graph.TransformPath;
+import org.janelia.saalfeldlab.ngff.multiscales.Multiscale;
 
 import bdv.util.BdvFunctions;
 import bdv.util.BdvOptions;
@@ -110,7 +112,7 @@ public class Vis {
 		try {
 			return addTransforms( Common.buildGraph(n5, gPath ));
 		} catch (IOException e) {
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 		return this;
 	}
@@ -118,12 +120,25 @@ public class Vis {
 	public <T extends NativeType<T> & NumericType<T>> BdvStackSource<?> show() {
 
 		BdvOptions opts = Optional.ofNullable(options).orElse(BdvOptions.options());
+		if( options == null )
+			options = opts;
+
 		String thisSpace = Optional.ofNullable(space).orElse(dataset);
 		
 //		System.out.println( "\nshow with");
 //		System.out.println( "  datset: " + dataset );
-//		System.out.println( "  space: " + space );
+//		System.out.println( "  space: " + thisSpace );
 		
+		Multiscale[] multiscales = null;
+		try {
+			multiscales = n5.getAttribute(dataset, "multiscales", Multiscale[].class );
+			if( multiscales != null )
+			{
+				N5Source<T> src = (N5Source<T>) Common.openMultiscaleSource(n5, dataset);
+				return BdvFunctions.show(src);
+			}
+		} catch (IOException e) { }
+
 		RandomAccessibleInterval<T> img;
 		try {
 			img = Common.open(n5, dataset);
@@ -131,6 +146,7 @@ public class Vis {
 			e.printStackTrace();
 			return null;
 		}
+		
 
 		// try with a fwd affine
 //		TransformPath pa = graph.path(dataset, thisSpace).get();
@@ -155,6 +171,7 @@ public class Vis {
 			return BdvFunctions.show(transformedRra , transformedInterval, dataset + " - " + thisSpace, opts );
 		}
 		
+//		System.out.println( "uh oh");
 		return null;
 	}
 

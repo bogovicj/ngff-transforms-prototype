@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.janelia.saalfeldlab.ngff.graph.TransformGraph;
@@ -75,7 +76,10 @@ public class SpacesTransforms {
 	}
 
 	public TransformGraph buildTransformGraph( String dataset, int nd ) {
-		return new TransformGraph( Arrays.asList(transforms), buildSpaces( dataset, nd ));
+		if( transforms == null )
+			return new TransformGraph();
+		else 
+			return new TransformGraph( Arrays.asList(transforms), buildSpaces( dataset, nd ));
 	}
 
 }

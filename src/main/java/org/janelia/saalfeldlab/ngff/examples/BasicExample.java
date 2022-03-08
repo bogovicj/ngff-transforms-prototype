@@ -11,6 +11,7 @@ import org.janelia.saalfeldlab.ngff.transforms.AffineCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransformAdapter;
 import org.janelia.saalfeldlab.ngff.transforms.ScaleCoordinateTransform;
+import org.janelia.saalfeldlab.ngff.vis.Vis;
 
 import com.google.gson.GsonBuilder;
 
@@ -53,10 +54,14 @@ public class BasicExample {
 		makeData( zarr );
 
 		// Try changing one or both of these to the empty string and see what happens
-		BdvOptions opts = BdvOptions.options();
-		opts = opts.addTo(show( zarr, dataset, "", opts));
-		show( zarr, dataset, "scanner", opts);
-		show( zarr, dataset, "LPS", opts);
+//		opts = opts.addTo(show( zarr, dataset, "", opts));
+//		show( zarr, dataset, "scanner", opts);
+//		show( zarr, dataset, "LPS", opts);
+		
+		final Vis vis = new Vis(zarr);
+		BdvStackSource<?> bdv = vis.dataset(dataset).show();
+		vis.bdvOptions( x -> x.addTo(bdv)).space("scanner").show();
+		vis.space("LPS").show();
 
 		zarr.close();
 		System.out.println("done");
@@ -102,12 +107,12 @@ public class BasicExample {
 		};
 
 		final CoordinateTransform[] transforms = new CoordinateTransform[] {
-				new ScaleCoordinateTransform( "to-mm", "", "scanner", new double[]{0.8, 0.8, 2.2}),
+				new ScaleCoordinateTransform( "to-mm", mriDataset, "scanner", new double[]{0.8, 0.8, 2.2}),
 				new AffineCoordinateTransform( "scanner-to-anatomical", "scanner", "LPS", toAnatomicalParams )
 		};
 
-		zarr.setAttribute(mriDataset, "spaces", spaces);
-		zarr.setAttribute(mriDataset, "transformations", transforms);
+		zarr.setAttribute(mriDataset, "coordinateSystems", spaces);
+		zarr.setAttribute(mriDataset, "coordinateTransformations", transforms);
 	}
 
 	public static BdvStackSource<?> show( N5ZarrWriter zarr, String dataset, String space, BdvOptions opts ) throws IOException 
