@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.janelia.saalfeldlab.ngff.SpacesTransforms;
+import org.janelia.saalfeldlab.ngff.axes.AxisUtils;
 import org.janelia.saalfeldlab.ngff.graph.TransformGraph;
 import org.janelia.saalfeldlab.ngff.graph.TransformPath;
 import org.janelia.saalfeldlab.ngff.spaces.ArraySpace;
@@ -21,8 +22,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import net.imglib2.RealPoint;
+import net.imglib2.realtransform.RealComponentMappingTransform;
+import net.imglib2.realtransform.RealInvertibleComponentMappingTransform;
 import net.imglib2.realtransform.RealTransform;
+import net.imglib2.realtransform.Scale2D;
 import net.imglib2.realtransform.StackedRealTransform;
+import net.imglib2.realtransform.Translation3D;
 
 public class AxisSubspacesExperiments {
 
@@ -43,6 +48,66 @@ public class AxisSubspacesExperiments {
 //		stackedTest( st );
 
 		stackedSubspaceTest( st );
+
+//		stackedTransformTest();
+
+//		permutationTest();
+	}
+
+	public static void permutationTest()
+	{
+		// test coordinate mapping and inverse first
+		String[] a = new String[]{ "c", "t", "x", "y", "z" };
+		String[] b = new String[]{ "x", "y", "c", "z", "t"};
+		
+		int[] pf = AxisUtils.findPermutation(a, b);
+		int[] pi = AxisUtils.findPermutation(b, a);
+		
+		RealPoint p = new RealPoint( 0.0, 1.0, 2.0, 3.0, 4.0 );
+		RealPoint q = new RealPoint( 0.0, 0.0, 0.0, 0.0, 0.0 );
+
+		// this works
+//		RealInvertibleComponentMappingTransform perm = new RealInvertibleComponentMappingTransform(pf);
+//		perm.apply(p, q);
+//
+//		System.out.println( "p: " + p );
+//		System.out.println( "q: " + q );
+//		System.out.println( " " );
+//		p.setPosition(new double[]{-1, -1, -1, -1, -1 }); // to make sure p changes
+//		
+//		perm.applyInverse( p, q );
+//		System.out.println( "q: " + q );
+//		System.out.println( "p: " + p );
+		
+		// these work
+//		RealComponentMappingTransform fwd = new RealComponentMappingTransform(5, pf);
+//		RealComponentMappingTransform inv = new RealComponentMappingTransform(5, pi);
+//		
+//		fwd.apply(p, q);
+//
+//		System.out.println( "p: " + p );
+//		System.out.println( "q: " + q );
+//		System.out.println( " " );
+//		
+//		inv.apply( q, p );
+//		System.out.println( "q: " + q );
+//		System.out.println( "p: " + p );
+
+	}
+	
+	public static void stackedTransformTest()
+	{
+		Scale2D s = new Scale2D( 2.0, 3.0 );
+		Translation3D t = new Translation3D( -5, -6, -7 );
+		StackedRealTransform xfm = new StackedRealTransform(s, t);
+
+		RealPoint p = new RealPoint( 1.0, -1.0, 0.0, 0.0, 0.0 );
+		RealPoint q = new RealPoint( 0.0, 0.0, 0.0, 0.0, 0.0 );
+		
+		xfm.apply( p, q );
+		System.out.println( " " );
+		System.out.println( "p: " + p );
+		System.out.println( "q: " + q );
 	}
 
 	public static void stackedSubspaceTest( SpacesTransforms st ) {
@@ -51,11 +116,11 @@ public class AxisSubspacesExperiments {
 		StackedCoordinateTransform xfm = (StackedCoordinateTransform) tgraph.getTransform("stack").get();
 		System.out.println( xfm );
 		
-//		xfm.setSpaces(tgraph.getSpaces());
+		xfm.setSpaces(tgraph.getSpaces());
 		xfm.buildTransform();
 		
-//		RealPoint p = new RealPoint( 1.0, 1.0, 1.0, 1.0, 1.0 );
-		RealPoint p = new RealPoint( 1.0, 0.0, 0.0, 0.0, 0.0 );
+		//                             x    y    c    z    t
+		RealPoint p = new RealPoint( 1.0, 1.0, 1.0, 1.0, 1.0 );
 		RealPoint q = new RealPoint( 0.0, 0.0, 0.0, 0.0, 0.0 );
 		xfm.getTransform().apply(p, q);
 

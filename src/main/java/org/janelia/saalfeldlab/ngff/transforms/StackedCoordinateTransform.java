@@ -54,47 +54,26 @@ public class StackedCoordinateTransform extends AbstractCoordinateTransform<Real
 
 		if( spaces != null )
 		{
-			String[] inputAxisLabels = spaces.getSpace(getInputSpace()).getAxisLabels();
-			String[] tformInputAxisLabels = inputAxesLabels();
+			final String[] inputAxisLabels = spaces.getSpace(getInputSpace()).getAxisLabels();
+			final String[] tformInputAxisLabels = inputAxesLabels();
 
-			String[] outputAxisLabels = spaces.getSpace(getOutputSpace()).getAxisLabels();
-			String[] tformOutputAxisLabels = outputAxesLabels();
-			
-			System.out.println( Arrays.toString(inputAxisLabels));
-			System.out.println( Arrays.toString(tformInputAxisLabels));
-			System.out.println( "" );
-			System.out.println( Arrays.toString(outputAxisLabels));
-			System.out.println( Arrays.toString(tformOutputAxisLabels));
-			
+			final String[] outputAxisLabels = spaces.getSpace(getOutputSpace()).getAxisLabels();
+			final String[] tformOutputAxisLabels = outputAxesLabels();
+
 			RealTransform pre = null;
 			if( !Arrays.equals(inputAxisLabels, tformInputAxisLabels))
 			{
+				// go from the input axis order to the transform's input axis order
 				final int[] inPermParams = AxisUtils.findPermutation(inputAxisLabels, tformInputAxisLabels);
-//				final int[] inPermParams = AxisUtils.findPermutation(tformInputAxisLabels, inputAxisLabels );
 				pre = new RealComponentMappingTransform( inPermParams.length, inPermParams);
-				
-				RealPoint p = new RealPoint( 1, 2, 3, 4, 5 );
-				RealPoint q = new RealPoint( 0, 0, 0, 0, 0 );
-				pre.apply( p, q );
-
-				System.out.println( " " );
-				System.out.println( "p: " + p );
-				System.out.println( "q: " + q );
 			}
 
 			RealTransform post = null;
 			if( !Arrays.equals(outputAxisLabels, tformOutputAxisLabels))
 			{
+				// go from the transforms output to the output axis order
 				final int[] outPermParams = AxisUtils.findPermutation(tformOutputAxisLabels, outputAxisLabels );
-//				final int[] outPermParams = AxisUtils.findPermutation( outputAxisLabels, tformOutputAxisLabels );
 				post = new RealComponentMappingTransform( outPermParams.length, outPermParams);
-				
-				RealPoint p = new RealPoint( 1, 2, 3, 4, 5 );
-				RealPoint q = new RealPoint( 0, 0, 0, 0, 0 );
-				post.apply( p, q );
-				System.out.println( " "  );
-				System.out.println( "p: " + p );
-				System.out.println( "q: " + q );
 			}
 
 			if( pre == null && post == null )
