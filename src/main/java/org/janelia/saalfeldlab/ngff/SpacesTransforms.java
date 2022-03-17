@@ -29,13 +29,18 @@ public class SpacesTransforms {
 		this.transforms = transforms;
 	}
 
-	public static SpacesTransforms load( Reader reader )
+	public static Gson buildGson()
 	{
 		final GsonBuilder gsonBuilder = new GsonBuilder();
 		gsonBuilder.registerTypeAdapter(CoordinateTransform.class, new CoordinateTransformAdapter(null));
 		final Gson gson = gsonBuilder.create();
-		final SpacesTransforms st = gson.fromJson(reader, SpacesTransforms.class );	
+		return gson;
+	}
 
+	public static SpacesTransforms load( Reader reader )
+	{
+		Gson gson = buildGson();
+		final SpacesTransforms st = gson.fromJson(reader, SpacesTransforms.class );	
 		return st;
 	}
 

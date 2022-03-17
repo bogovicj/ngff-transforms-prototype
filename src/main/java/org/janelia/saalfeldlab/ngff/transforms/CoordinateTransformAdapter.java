@@ -1,6 +1,7 @@
 package org.janelia.saalfeldlab.ngff.transforms;
 
 import java.lang.reflect.Type;
+import java.util.Arrays;
 
 import org.janelia.saalfeldlab.n5.N5Reader;
 
@@ -84,11 +85,10 @@ public class CoordinateTransformAdapter
 			// in the future, look into RuntimeTypeAdapterFactory in gson-extras
 			// when it is more officially maintained
 
-			final JsonObject tmp = context.deserialize( jobj, JsonObject.class );
-			final IdentityCoordinateTransform id = context.deserialize( tmp, IdentityCoordinateTransform.class );
-			if( tmp.has("transformations"))
+			final IdentityCoordinateTransform id = context.deserialize( jobj, IdentityCoordinateTransform.class );
+			if( jobj.has("transformations"))
 			{
-				final JsonArray ja = tmp.get("transformations").getAsJsonArray();
+				final JsonArray ja = jobj.get("transformations").getAsJsonArray();
 				final RealCoordinateTransform[] transforms = new RealCoordinateTransform[ ja.size() ];
 				for( int i=0; i < ja.size(); i++) {
 					JsonElement e = ja.get(i).getAsJsonObject();
@@ -103,7 +103,9 @@ public class CoordinateTransformAdapter
 
 			break;
 		case("stacked"):
-			out = context.deserialize( jobj, StackedCoordinateTransform.class );
+			final IdentityCoordinateTransform sid = context.deserialize( jobj, IdentityCoordinateTransform.class );
+			final RealCoordinateTransform[] transforms = parseTransformList( jobj, "transformations", context );
+			out = new StackedCoordinateTransform(sid.getName(), sid.getInputSpace(), sid.getOutputSpace(), Arrays.asList( transforms ));
 			break;
 		}
 		/*
@@ -113,6 +115,16 @@ public class CoordinateTransformAdapter
 		//readTransformParameters(out);
 
 		return out;
+	}
+
+	private final RealCoordinateTransform[] parseTransformList( JsonObject elem, String key, JsonDeserializationContext context ) {
+		final JsonArray ja = elem.get(key).getAsJsonArray();
+		final RealCoordinateTransform[] transforms = new RealCoordinateTransform[ja.size()];
+		for (int i = 0; i < ja.size(); i++) {
+			JsonElement e = ja.get(i).getAsJsonObject();
+			transforms[i] = context.deserialize(e, CoordinateTransform.class);
+		}
+		return transforms;
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })

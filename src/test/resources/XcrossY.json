@@ -3,18 +3,8 @@
     {
       "name": "xyspace",
       "axes": [
-        {
-          "type": "space",
-          "label": "x",
-          "unit": "micrometer",
-          "discrete": false
-        },
-        {
-          "type": "space",
-          "label": "y",
-          "unit": "micrometer",
-          "discrete": false
-        }
+        { "type": "space", "label": "x", "unit": "micrometer", "discrete": false },
+        { "type": "space", "label": "y", "unit": "micrometer", "discrete": false }
       ]
     }
   ],
@@ -22,7 +12,7 @@
     {
       "type": "stacked",
       "name": "toPhysical",
-      "transforms": [
+      "transformations": [
         {
           "type": "scale",
           "scale": [ 2 ]

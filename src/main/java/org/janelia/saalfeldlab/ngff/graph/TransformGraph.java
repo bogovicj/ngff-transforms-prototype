@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.janelia.saalfeldlab.n5.N5Reader;
+import org.janelia.saalfeldlab.ngff.SpacesTransforms;
 import org.janelia.saalfeldlab.ngff.spaces.Space;
 import org.janelia.saalfeldlab.ngff.spaces.Spaces;
 import org.janelia.saalfeldlab.ngff.transforms.AbstractCoordinateTransform;
@@ -21,7 +22,7 @@ import net.imglib2.realtransform.InvertibleRealTransform;
 
 public class TransformGraph
 {
-	public static final Gson gson = new Gson();
+	public final Gson gson;
 
 	private final ArrayList< CoordinateTransform<?> > transforms;
 	
@@ -33,10 +34,12 @@ public class TransformGraph
 		spaces = new Spaces();
 		transforms = new ArrayList<>();
 		spacesToNodes = new HashMap< Space, SpaceNode >();
+		gson = SpacesTransforms.buildGson();
 	}
 
 	public TransformGraph( List<CoordinateTransform<?>> transforms, final Spaces spaces ) {
 
+		gson = SpacesTransforms.buildGson();
 		this.spaces = spaces;
 		this.transforms = new ArrayList<>();
 //		this.transforms.addAll(transforms);

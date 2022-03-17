@@ -20,6 +20,10 @@ public abstract class AbstractCoordinateTransform<T> implements CoordinateTransf
 
 	private String[] output_axes;
 
+	private transient Space inputSpaceObj;
+
+	private transient Space outputSpaceObj;
+
 	public abstract T getTransform();
 
 	public AbstractCoordinateTransform( final String type, 
@@ -39,7 +43,7 @@ public abstract class AbstractCoordinateTransform<T> implements CoordinateTransf
 		this.input_axes = inputAxes;
 		this.output_axes = outputAxes;
 	}
-	
+
 	/**
 	 * 
 	 * If this object does not have input_space or output_space defined,
@@ -61,6 +65,16 @@ public abstract class AbstractCoordinateTransform<T> implements CoordinateTransf
 			return true;
 		else
 			return false;
+	}
+
+	public String[] getInputAxes()
+	{
+		return input_axes;
+	}
+
+	public String[] getOutputAxes()
+	{
+		return output_axes;
 	}
 
 	private static String spaceNameFromAxesLabels( Spaces spaces, String[] axes )

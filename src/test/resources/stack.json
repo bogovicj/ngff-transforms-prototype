@@ -1,0 +1,44 @@
+{
+  "spaces": [
+    {
+      "name": "xyczt",
+      "axes": [
+        { "label": "x", "type": "space", "unit": "micrometer", "discrete" : false },
+        { "label": "y", "type": "space", "unit": "micrometer", "discrete" : false },
+        { "label": "c", "type": "channel", "unit": "", "discrete": true },
+        { "label": "z", "type": "space", "unit": "micrometer", "discrete" : false },
+        { "label": "t", "type": "time", "unit": "second", "discrete" : false }
+      ]
+    }
+  ],
+  "transforms": [
+    {
+      "type": "stacked",
+      "name": "stack",
+      "input_space": "",
+      "output_space": "xyczt",
+      "transformations": [
+        {
+          "type": "identity",
+          "input_axes": [ "dim_2" ],
+          "output_axes": [ "c" ]
+        },
+        {
+          "type": "scale",
+          "scale" : [ 5.0 ],
+          "input_axes": [ "dim_4" ],
+          "output_axes": [ "t" ]
+        },
+        {
+          "affine": [ 
+              100.0, 10.0, 1.0, 0.5, 
+              20.0, 200.0, 2.0, 0.6, 
+              3.0, 30.0, 300.0, 0.7 ],
+          "type": "affine",
+          "input_axes": [ "dim_0", "dim_1", "dim_3" ],
+          "output_axes": [ "x", "y", "z" ]
+        }
+      ]
+    }
+  ]
+}

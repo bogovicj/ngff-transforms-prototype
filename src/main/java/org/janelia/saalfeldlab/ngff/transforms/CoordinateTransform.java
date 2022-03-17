@@ -15,4 +15,8 @@ public interface CoordinateTransform<T> {
 	public String getInputSpace();
 
 	public String getOutputSpace();
+
+	public String[] getInputAxes();
+
+	public String[] getOutputAxes();
 }

@@ -14,12 +14,14 @@ import org.janelia.saalfeldlab.ngff.spaces.Space;
 import org.janelia.saalfeldlab.ngff.spaces.Spaces;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransformAdapter;
+import org.janelia.saalfeldlab.ngff.transforms.RealCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.StackedCoordinateTransform;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import net.imglib2.RealPoint;
+import net.imglib2.realtransform.RealTransform;
 import net.imglib2.realtransform.StackedRealTransform;
 
 public class AxisSubspacesExperiments {
@@ -28,22 +30,45 @@ public class AxisSubspacesExperiments {
 //		final String testDataF = "/home/john/dev/ngff/ngff-transforms-prototype/src/test/resources/XandYtoXY.json";
 //		final String testDataF = "src/test/resources/XY.json";
 //		final String testDataF = "src/test/resources/sepXY.json";
-		final String testDataF = "src/test/resources/XcrossY.json";
+//		final String testDataF = "src/test/resources/XcrossY.json";
+//		final String testDataF = "src/test/resources/XcrossY.json";
+		final String testDataF = "src/test/resources/stack.json";
 
 		SpacesTransforms st = SpacesTransforms.loadFile(testDataF);
+		System.out.println( st );
 
-		TransformGraph tgraph = st.buildTransformGraph( 2 );
-		transformsTest( tgraph );
+//		TransformGraph tgraph = st.buildTransformGraph( 2 );
+//		transformsTest( tgraph );
 
-//		System.out.println( st );
 //		stackedTest( st );
+
+		stackedSubspaceTest( st );
+	}
+
+	public static void stackedSubspaceTest( SpacesTransforms st ) {
+		TransformGraph tgraph = st.buildTransformGraph( 5 );
+		System.out.println( tgraph );
+		StackedCoordinateTransform xfm = (StackedCoordinateTransform) tgraph.getTransform("stack").get();
+		System.out.println( xfm );
+		
+//		xfm.setSpaces(tgraph.getSpaces());
+		xfm.buildTransform();
+		
+//		RealPoint p = new RealPoint( 1.0, 1.0, 1.0, 1.0, 1.0 );
+		RealPoint p = new RealPoint( 1.0, 0.0, 0.0, 0.0, 0.0 );
+		RealPoint q = new RealPoint( 0.0, 0.0, 0.0, 0.0, 0.0 );
+		xfm.getTransform().apply(p, q);
+
+		System.out.println( " " );
+		System.out.println( "p: " + p );
+		System.out.println( "q: " + q );
 	}
 
 	// with XcrossY
 	public static void stackedTest( SpacesTransforms st ) {
 		StackedCoordinateTransform stackedXfm = (StackedCoordinateTransform) st.transforms[0];
 		System.out.println( stackedXfm );
-		StackedRealTransform t = stackedXfm.getTransform();
+		RealTransform t = stackedXfm.getTransform();
 		
 		RealPoint p = new RealPoint( 1.0, 1.0 );
 		RealPoint q = new RealPoint( 0.0, 0.0 );
