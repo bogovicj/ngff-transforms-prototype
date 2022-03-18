@@ -2,6 +2,7 @@ package org.janelia.saalfeldlab.ngff.transforms;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.janelia.saalfeldlab.n5.metadata.axes.AxisUtils;
 import org.janelia.saalfeldlab.ngff.spaces.Spaces;
@@ -27,6 +28,14 @@ public class StackedCoordinateTransform extends AbstractCoordinateTransform<Real
 	{
 		super( "stacked", name, inputSpace, outputSpace );
 		this.transforms = transforms;
+	}
+
+	public StackedCoordinateTransform( 
+			final String name,
+			final String inputSpace, final String outputSpace,
+			CoordinateTransform<?>[] transforms )
+	{
+		this( name, inputSpace, outputSpace, Arrays.stream( transforms ).collect( Collectors.toList() ));
 	}
 
 	public void setSpaces( Spaces spaces )

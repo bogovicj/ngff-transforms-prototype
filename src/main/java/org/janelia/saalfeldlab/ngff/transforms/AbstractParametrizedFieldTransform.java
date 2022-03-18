@@ -27,11 +27,16 @@ public abstract class AbstractParametrizedFieldTransform<T,V extends NumericType
 		this( type, name, null, inputSpace, outputSpace );
 	}
 
-	public AbstractParametrizedFieldTransform( String type, String name, String parameterPath, 
+	public AbstractParametrizedFieldTransform( String type, String name, String parameterPath,
 			String inputSpace, String outputSpace ) {
 		super( type, name, parameterPath, inputSpace, outputSpace );
 	}
 	
+	public AbstractParametrizedFieldTransform( String type, String name, String parameterPath,
+			String[] inputAxes, String[] outputAxes ) {
+		super( type, name, parameterPath, inputAxes, outputAxes );
+	}
+
 	public int getVectorAxisIndex() {
 		return vectorAxisIndex;
 	}

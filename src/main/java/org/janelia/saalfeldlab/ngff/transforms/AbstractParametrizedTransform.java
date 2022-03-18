@@ -8,9 +8,15 @@ public abstract class AbstractParametrizedTransform<T,P> extends AbstractCoordin
 		this( type, name, null, inputSpace, outputSpace );
 	}
 
-	public AbstractParametrizedTransform( String type, String name, String parameterPath, 
+	public AbstractParametrizedTransform( String type, String name, String parameterPath,
 			String inputSpace, String outputSpace ) {
 		super( type, name, inputSpace, outputSpace );
+		this.path = parameterPath;
+	}
+
+	public AbstractParametrizedTransform( String type, String name, String parameterPath, 
+			String[] inputAxes, String[] outputAxes ) {
+		super( type, name, inputAxes, outputAxes );
 		this.path = parameterPath;
 	}
 

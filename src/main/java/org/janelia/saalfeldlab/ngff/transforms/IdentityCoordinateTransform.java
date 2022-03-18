@@ -10,6 +10,10 @@ public class IdentityCoordinateTransform extends AbstractCoordinateTransform<Inv
 		super("identity", name, inputSpace, outputSpace );
 	}
 
+	public IdentityCoordinateTransform( final String name, final String[] inputAxes, final String[] outputAxes ) {
+		super("identity", name, inputAxes, outputAxes );
+	}
+
 	@Override
 	public InvertibleRealTransform getTransform()
 	{

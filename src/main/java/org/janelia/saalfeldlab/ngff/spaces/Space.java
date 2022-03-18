@@ -6,7 +6,7 @@ import java.util.stream.IntStream;
 import org.janelia.saalfeldlab.ngff.axes.Axis;
 
 /**
- * A Space is a set of axes.
+ * A Space is a set of axes with a name.
  *
  * @author John Bogovic
  */

@@ -41,6 +41,15 @@ public class DisplacementFieldCoordinateTransform<T extends RealType<T>> extends
 		super("displacement_field", name, path, inputSpace, outputSpace  );
 	}
 
+	public DisplacementFieldCoordinateTransform( final String name, final String path,
+			final String[] inputAxes, final String[] outputAxes ) {
+		super("displacement_field", name, path, inputAxes, outputAxes );
+	}
+
+	public DisplacementFieldCoordinateTransform( final String name, final String path) {
+		this( name, path, "", "" );
+	}
+
 	public int getVectorAxisIndex() {
 		return positionAxisIndex;
 	}

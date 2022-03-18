@@ -7,22 +7,22 @@ import org.janelia.saalfeldlab.ngff.spaces.Spaces;
 
 public abstract class AbstractCoordinateTransform<T> implements CoordinateTransform<T> {
 
-	private String type;
+	protected String type;
 
-	private String name;
+	protected String name;
 	
-	private String input_space;
+	protected String input_space;
 
-	private String output_space;
+	protected String output_space;
 
 	// implement
-	private String[] input_axes;
+	protected String[] input_axes;
 
-	private String[] output_axes;
+	protected String[] output_axes;
 
-	private transient Space inputSpaceObj;
+	protected transient Space inputSpaceObj;
 
-	private transient Space outputSpaceObj;
+	protected transient Space outputSpaceObj;
 
 	public abstract T getTransform();
 

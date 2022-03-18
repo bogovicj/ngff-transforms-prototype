@@ -164,14 +164,14 @@ public class BijectiveRegistrationExample {
 
 		final SequenceCoordinateTransform fwdTransform = new SequenceCoordinateTransform("jrc2018F-to-fcwb", "jrc2018F", "fcwb", 
 				new RealCoordinateTransform[] {
-					new DisplacementFieldCoordinateTransform(null, baseDataset + "/fwdDfield", null, null),
+					new DisplacementFieldCoordinateTransform(null, baseDataset + "/fwdDfield" ),
 					new AffineCoordinateTransform(null, null, null, params )
 				});
 
 		final SequenceCoordinateTransform invTransform = new SequenceCoordinateTransform("fcwb-to-jrc2018F", "fcwb", "jrc2018F",
 				new RealCoordinateTransform[] {
 					new AffineCoordinateTransform(null, null, null, affine.inverse().getRowPackedCopy()),
-					new DisplacementFieldCoordinateTransform(null, baseDataset + "/invDfield", null, null)
+					new DisplacementFieldCoordinateTransform(null, baseDataset + "/invDfield" )
 				});
 
 		transforms.add( fwdTransform );

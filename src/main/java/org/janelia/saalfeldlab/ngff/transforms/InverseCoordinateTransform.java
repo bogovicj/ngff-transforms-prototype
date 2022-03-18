@@ -5,8 +5,10 @@ public class InverseCoordinateTransform<T,C extends CoordinateTransform<T>> exte
 	protected C transform;
 
 	public InverseCoordinateTransform( final String name, final C ct ) {
-		// input and output spaces must be swapped
+		// input and output spaces / axes must be swapped
 		super( "inverse_of", name, ct.getOutputSpace(), ct.getInputSpace());
+		super.input_axes = ct.getOutputAxes();
+		super.output_axes = ct.getInputAxes();
 		this.transform = ct;
 	}
 	

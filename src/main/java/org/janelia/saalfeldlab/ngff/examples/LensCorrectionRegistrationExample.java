@@ -17,10 +17,12 @@ import org.janelia.saalfeldlab.ngff.spaces.Spaces;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransformAdapter;
 import org.janelia.saalfeldlab.ngff.transforms.DisplacementFieldCoordinateTransform;
+import org.janelia.saalfeldlab.ngff.transforms.IdentityCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.InverseCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.RealCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.ScaleCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.SequenceCoordinateTransform;
+import org.janelia.saalfeldlab.ngff.transforms.StackedCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.TranslationCoordinateTransform;
 
 import com.google.gson.GsonBuilder;
@@ -72,16 +74,16 @@ import net.imglib2.view.composite.GenericComposite;
 public class LensCorrectionRegistrationExample {
 
 	public static void main(String[] args) throws IOException {
-		final String root = "/home/john/projects/ngff/transformsExamples/data.zarr";
-//		final String root = "/groups/saalfeld/home/bogovicj/projects/ngff/transformsExamples/data.zarr";
+//		final String root = "/home/john/projects/ngff/transformsExamples/data.zarr";
+		final String root = "/groups/saalfeld/home/bogovicj/projects/ngff/transformsExamples/data.zarr";
 		final String baseDataset = "/lensStitchPipeline";
 
 		GsonBuilder gsonBuilder = new GsonBuilder();
 		gsonBuilder.registerTypeAdapter(CoordinateTransform.class, new CoordinateTransformAdapter(null));
 		final N5ZarrWriter zarr = new N5ZarrWriter(root, gsonBuilder );
 
-//		makeEverything( zarr, baseDataset );
-		visTest(zarr, baseDataset);
+		makeEverything( zarr, baseDataset );
+//		visTest(zarr, baseDataset);
 
 		System.out.println( "done done");
 	}
@@ -154,7 +156,7 @@ public class LensCorrectionRegistrationExample {
 		return new SequenceCoordinateTransform(name, "lens-corrected", "stitched", seq );
 	}
 
-	public static void makeEverything( final N5Writer n5, final String baseDataset ) throws IOException
+	public static void makeEverything( final N5ZarrWriter zarr, final String baseDataset ) throws IOException
 	{
 		final UnsignedByteType type = new UnsignedByteType();
 		final double[] resolution = new double[] { 0.8, 0.8, 1.2 };
@@ -176,53 +178,68 @@ public class LensCorrectionRegistrationExample {
 //				new FinalInterval(512,512,512),
 //				null, 2);
 //
-//		N5Utils.save(highResSource.getSource(0, 0), n5, String.format("%s/highResSource", baseDataset), blkSize, compression);
+//		N5Utils.save(highResSource.getSource(0, 0), zarr, String.format("%s/highResSource", baseDataset), blkSize, compression);
 
-//		System.out.println( "write raw tiles");
-//		int i = 0;
-//		for( double[] center : centers ) {
-//			System.out.println( "writing: " + i );
+		System.out.println( "write raw tiles");
+		int i = 0;
+		for( double[] center : centers ) {
+			System.out.println( "writing: " + i );
 //			RandomAccessibleIntervalSource<UnsignedByteType> src = Common.image(type, raw, resolution, center, interval, null, 2);
 //			RandomAccessibleInterval<UnsignedByteType> img = src .getSource(0, 0);
-//
-//			double[] ti = Common.translation( interval, center );
-//			CoordinateTransform<?> st = makeScaleTranslation( String.format("tile-%d-stitch", i ), resolution, ti );
-//			transforms.add( st );
-//
-//			N5Utils.save(img, n5, String.format("%s/lenscorrected/tile-%d", baseDataset, i ), blkSize, compression);
-//			i++;
-//		}
-//
-//		DeformationFieldTransform<DoubleType> xfm2d = buildLensCorrectionTransform( interval, new double[]{127, 127});
-//		StackedRealTransform distortion = new StackedRealTransform( xfm2d, new Scale(1.0) );
-//
+
+			double[] ti = Common.translation( interval, center );
+			CoordinateTransform<?> st = makeScaleTranslation( String.format("tile-%d-stitch", i ), resolution, ti );
+			transforms.add( st );
+
+//			N5Utils.save(img, zarr, String.format("%s/lenscorrected/tile-%d", baseDataset, i ), blkSize, compression);
+			i++;
+		}
+
+		DeformationFieldTransform<DoubleType> xfm2d = buildLensCorrectionTransform( interval, new double[]{127, 127});
+		StackedRealTransform distortion = new StackedRealTransform( xfm2d, new Scale(1.0) );
+
 //		System.out.println( "write distorted tiles");
 //		i = 0;
 //		for( double[] center : centers ) {
 //			System.out.println( "writing distorted: " + i );
 //			RandomAccessibleIntervalSource<UnsignedByteType> src = Common.image(type, raw, resolution, center, interval, distortion, 2);
 //			RandomAccessibleInterval<UnsignedByteType> img = src.getSource(0, 0);
-//			N5Utils.save(img, n5, String.format("%s/raw/tile-%d", baseDataset, i ), blkSize, compression);
+//			N5Utils.save(img, zarr, String.format("%s/raw/tile-%d", baseDataset, i ), blkSize, compression);
 //			i++;
 //		}
-//
+
 //		WrappedIterativeInvertibleRealTransform<?> ixfm = new WrappedIterativeInvertibleRealTransform<>(xfm2d);
 //		ixfm.getOptimzer().setTolerance(0.05);
 //		ixfm.getOptimzer().setMaxIters(3000);
-//
+
+
+		String lensCorrectionTransformPath = String.format("%s/lenscorrected/transform", baseDataset);
 //		Img<FloatType> dfield = makeDfield2dInv( new long[]{256,256}, ixfm );
-//		String lensCorrectionTransformPath = String.format("%s/lenscorrected/transform", baseDataset);
-//		N5Utils.save(dfield, n5, lensCorrectionTransformPath, blkSize, compression);
-//		
-//		// make transforms 
-//		DisplacementFieldCoordinateTransform lcXfm = new DisplacementFieldCoordinateTransform<>("lens-correction", lensCorrectionTransformPath, "", "lens-corrected");
-//		InverseCoordinateTransform lcXfmInv = new InverseCoordinateTransform( "lens-correction", lcXfm );
-//		transforms.add( lcXfmInv );
-//
-//		n5.setAttribute(baseDataset, "spaces", makeSpaces().spaces().toArray(Space[]::new));
-//		n5.setAttribute(baseDataset, "transformations", transforms);
-//
+//		N5Utils.save(dfield, zarr, lensCorrectionTransformPath, blkSize, compression);
+		
+		// make four transforms pointing to teh same thing
+		for( int j = 0; j < 4; j++ )
+		{
+			transforms.add( makeLensCorrectionTransform("lc-"+j, lensCorrectionTransformPath, String.format("%s/raw/tile-%d", baseDataset, j ), "lens-corrected") );
+			
+		}
+
+		final Space[] spaces = makeSpaces().spaces().toArray(Space[]::new);
+		zarr.setAttribute(baseDataset, "spaces", spaces );
+		zarr.setAttribute(baseDataset, "transformations", transforms);
+
 		System.out.println( "make done");
+	}
+	
+	public static CoordinateTransform<?> makeLensCorrectionTransform( String name, String transformPath, String inputSpace, String outputSpace )
+	{
+		String[] xy = new String[]{ "x", "y" };
+		String[] z = new String[]{ "z" };
+		IdentityCoordinateTransform id = new IdentityCoordinateTransform( "", z, z );
+		DisplacementFieldCoordinateTransform<?> lcXfm = new DisplacementFieldCoordinateTransform<>("", transformPath, xy, xy );
+		InverseCoordinateTransform<?,?> ict = new InverseCoordinateTransform<>( name, lcXfm );
+		StackedCoordinateTransform xfm = new StackedCoordinateTransform( name, inputSpace, outputSpace, new CoordinateTransform[]{ ict, id } );
+		return xfm;
 	}
 
 	public static void makeEverythingOld( final N5Writer n5, final String baseDataset ) throws IOException
