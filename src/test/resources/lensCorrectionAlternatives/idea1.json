@@ -1,0 +1,66 @@
+{
+  "conclusion" : "I don't like this because of the 'collision' of spaces",
+  "comments" : "one lens-corrected space, that every dataset goes into, and every dataset comes out of",
+
+  "spaces": [
+    { "name": "tile-0", "comment" : "default axes" },
+    { "name": "tile-1", "comment" : "default axes" },
+    { "name": "tile-2", "comment" : "default axes" },
+    { "name": "tile-3", "comment" : "default axes" },
+    {
+      "name": "lens-corrected",
+      "axes": [
+        { "type": "space", "label": "corrected.x", "unit": "pixel", "discrete": false },
+        { "type": "space", "label": "corrected.y", "unit": "pixel", "discrete": false },
+        { "type": "space", "label": "corrected.z", "unit": "pixel", "discrete": false }
+      ]
+    },
+    {
+      "name": "stitched",
+      "axes": [
+        { "type": "space", "label": "stitched.x", "unit": "pixel", "discrete": false },
+        { "type": "space", "label": "stitched.y", "unit": "pixel", "discrete": false },
+        { "type": "space", "label": "stitched.z", "unit": "pixel", "discrete": false }
+      ]
+    }
+  ],
+  "transformations" : [
+    {
+      "comments" : "note the empty input space - important because it will be applied to all tiles",
+
+      "name": "lens-correction",
+      "transform": { "path": "/lensStitchPipeline/lenscorrected/transform", "type": "displacement_field" },
+      "type": "inverse_of",
+      "input_space": "",
+      "input_space": "lens-corrected"
+    },
+    {
+      "name": "tile-0-stitch",
+      "type": "translation",
+      "translation": [ -48.5, -48.5, 0.5 ],
+      "input_space": "lens-corrected",
+      "output_space": "stitched"
+    },
+    {
+      "name": "tile-1-stitch",
+      "type": "translation",
+      "translation": [ -48.5, 49.5, 0.5 ],
+      "input_space": "lens-corrected",
+      "output_space": "stitched"
+    },
+    {
+      "name": "tile-2-stitch",
+      "type": "translation",
+      "translation": [ 49.5, -48.5, 0.5 ],
+      "input_space": "lens-corrected",
+      "output_space": "stitched"
+    },
+    {
+      "name": "tile-3-stitch",
+      "type": "translation",
+      "translation": [ 49.5, 49.5, 0.5 ],
+      "input_space": "lens-corrected",
+      "output_space": "stitched"
+    }
+  ]
+}

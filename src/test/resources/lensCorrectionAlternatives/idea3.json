@@ -1,0 +1,81 @@
+{
+  "conclusion" : "This is interesting. Is adding a new type of object worth not repeating yourself?",
+  "comments" : "reuse transform objects in a separate graph structure",
+
+  "transformations" : [
+    {
+      "comments" : "all of these are referenced below"
+    },
+    {
+      "name": "lens-correction",
+      "transform": { "path": "/lensStitchPipeline/lenscorrected/transform", "type": "displacement_field" },
+      "type": "inverse_of"
+    },
+    { "name": "tile-0-stitch", "type": "translation", "translation": [ -50, -50, 0 ] },
+    { "name": "tile-1-stitch", "type": "translation", "translation": [ -50,  50, 0 ] },
+    { "name": "tile-2-stitch", "type": "translation", "translation": [  50, -50, 0 ] },
+    { "name": "tile-3-stitch", "type": "translation", "translation": [  50,  50, 0 ] }
+  ],
+  "graph" : {
+
+      "comment" : "notice the first four edges all reference the same transform, but use it for different input / output spaces",
+
+      "edges" : [
+        { "name": "lens-correct", "input_space" : "/raw/tile-0", "output_space": "lens-corrected-0" },
+        { "name": "lens-correct", "input_space" : "/raw/tile-1", "output_space": "lens-corrected-1" },
+        { "name": "lens-correct", "input_space" : "/raw/tile-2", "output_space": "lens-corrected-2" },
+        { "name": "lens-correct", "input_space" : "/raw/tile-3", "output_space": "lens-corrected-3" },
+        { "name": "tile-0-stitch", "input_space": "lens-corrected-0", "output_space": "stitched" },
+        { "name": "tile-1-stitch", "input_space": "lens-corrected-1", "output_space": "stitched" },
+        { "name": "tile-2-stitch", "input_space": "lens-corrected-2", "output_space": "stitched" },
+        { "name": "tile-3-stitch", "input_space": "lens-corrected-3", "output_space": "stitched" }
+      ],
+
+      "spaces": [
+        { "name": "/raw/tile-0", "comment" : "default axes, won't usually be explicitly defined" },
+        { "name": "/raw/tile-1", "comment" : "default axes, won't usually be explicitly defined" },
+        { "name": "/raw/tile-2", "comment" : "default axes, won't usually be explicitly defined" },
+        { "name": "/raw/tile-3", "comment" : "default axes, won't usually be explicitly defined" },
+        {
+          "name": "lens-corrected-0",
+          "axes": [
+            { "type": "space", "label": "x", "unit": "pixel", "discrete": false },
+            { "type": "space", "label": "y", "unit": "pixel", "discrete": false },
+            { "type": "space", "label": "z", "unit": "pixel", "discrete": false }
+          ]
+        },
+        {
+          "name": "lens-corrected-1",
+          "axes": [
+            { "type": "space", "label": "x", "unit": "pixel", "discrete": false },
+            { "type": "space", "label": "y", "unit": "pixel", "discrete": false },
+            { "type": "space", "label": "z", "unit": "pixel", "discrete": false }
+          ]
+        },
+        {
+          "name": "lens-corrected-2",
+          "axes": [
+            { "type": "space", "label": "x", "unit": "pixel", "discrete": false },
+            { "type": "space", "label": "y", "unit": "pixel", "discrete": false },
+            { "type": "space", "label": "z", "unit": "pixel", "discrete": false }
+          ]
+        },
+        {
+          "name": "lens-corrected-3",
+          "axes": [
+            { "type": "space", "label": "x", "unit": "pixel", "discrete": false },
+            { "type": "space", "label": "y", "unit": "pixel", "discrete": false },
+            { "type": "space", "label": "z", "unit": "pixel", "discrete": false }
+          ]
+        },
+        {
+          "name": "stitched",
+          "axes": [
+            { "type": "space", "label": "x", "unit": "pixel", "discrete": false },
+            { "type": "space", "label": "y", "unit": "pixel", "discrete": false },
+            { "type": "space", "label": "z", "unit": "pixel", "discrete": false }
+          ]
+        }
+      ]
+  }
+}
