@@ -13,6 +13,27 @@ public class ScaleCoordinateTransform extends AbstractLinearCoordinateTransform<
 
 	public transient ScaleGet transform;
 
+	public ScaleCoordinateTransform( final double[] scale ) {
+		super("scale", null, null, null );
+		this.scale = scale;
+		buildTransform( scale );
+	}
+
+	public ScaleCoordinateTransform( String name, 
+			final double[] scale) {
+		super("scale", name, null, null );
+		this.scale = scale;
+		buildTransform( scale );
+	}
+
+	public ScaleCoordinateTransform( String name, 
+			final String[] inputAxes, String[] outputAxes,
+			final double[] scale) {
+		super("scale", name, null, inputAxes, outputAxes );
+		this.scale = scale;
+		buildTransform( scale );
+	}
+
 	public ScaleCoordinateTransform( String name, final String inputSpace, final String outputSpace,
 			final double[] scale) {
 		super("scale", name, inputSpace, outputSpace );

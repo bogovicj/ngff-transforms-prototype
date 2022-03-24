@@ -2,8 +2,10 @@ package org.janelia.saalfeldlab.ngff.spaces;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.janelia.saalfeldlab.ngff.axes.Axis;
+import org.janelia.saalfeldlab.ngff.axes.AxisUtils;
 
 /**
  * A Space is a set of axes with a name.
@@ -54,11 +56,11 @@ public class Space {
 		return Arrays.stream(axes).map(Axis::getLabel).anyMatch(l -> l.equals(label));
 	}
 
-	public boolean isSubspaceOf( Space other ) {
-		return isSubspaceOf(other.getAxisLabels());
+	public boolean isSuperspaceOf( Space other ) {
+		return isSuperspaceOf(other.getAxisLabels());
 	}
 
-	public boolean isSubspaceOf( String[] axisLabels )
+	public boolean isSuperspaceOf( String[] axisLabels )
 	{
 		String[] mylabels = getAxisLabels();
 		for( String l : axisLabels )
@@ -67,7 +69,84 @@ public class Space {
 
 		return true;
 	}
+
+	public boolean isSubspaceOf( Space other ) 
+	{
+		return isSubspaceOf(other.getAxisLabels());
+	}
+
+	public boolean isSubspaceOf( String[] axisLabels )
+	{
+		for( String l : getAxisLabels() )
+			if( !contains( l, axisLabels ))
+				return false;
+
+		return true;
+	}
+
+	public Space subSpace( String name, final String... axisLabels )
+	{
+		return new Space( name,
+				Arrays.stream(axes).filter( x -> {return AxisUtils.contains(x.getLabel(), axisLabels);})
+				.toArray( Axis[]::new ));
+	}
+
+	public Space union( String name, Space space )
+	{
+		return new Space( name,
+				Stream.concat(
+						Arrays.stream(axes),
+						Arrays.stream(space.getAxes()))
+				.toArray( Axis[]::new ));
+	}
+
+	public Space intersection( String name, Space space )
+	{
+		return subSpace( name, space.getAxisLabels() );
+	}
 	
+	/**
+	 * Returns a space with the axes
+	 * 
+	 * @param name
+	 * @param space
+	 * @return
+	 */
+	public Space diff( String name, Space space )
+	{
+		final String[] axisLabels = space.getAxisLabels();
+		return new Space( name, 
+				Arrays.stream(axes).filter( x -> {return !AxisUtils.contains(x.getLabel(), axisLabels);})
+				.toArray( Axis[]::new ));
+	}
+
+
+	/**
+	 * Returns true if these two spaces contain the same set of axes,
+	 * in any order.
+	 * 
+	 * @param other the other space
+	 * @return contain same axes
+	 */
+	public boolean axesEquals( Space other ) {
+
+		return axesEquals(other.getAxisLabels());
+	}
+
+	/**
+	 * Returns true if these two spaces contain the same set of axes,
+	 * in any order.
+	 * 
+	 * @param axes the axis labels
+	 * @return contain same axes
+	 */
+	public boolean axesEquals( String[] axes ) {
+		if( axes.length != this.getAxisLabels().length )
+			return false;
+
+		return isSubspaceOf(axes);
+	}
+
 	private static boolean contains( String q, String[] array )
 	{
 		for( String t : array )
@@ -137,7 +216,7 @@ public class Space {
 	
 	public String toString()
 	{
-		return name;
+		return "\"" + name + "\" : " + Arrays.toString(getAxisLabels());
 	}
 
 	public static final ArraySpace arraySpace( int nd ) {

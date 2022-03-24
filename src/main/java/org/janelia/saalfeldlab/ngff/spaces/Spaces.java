@@ -4,10 +4,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.janelia.saalfeldlab.ngff.axes.Axis;
+import org.janelia.saalfeldlab.ngff.transforms.AbstractCoordinateTransform;
+import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
 
 /**
  * This class manages Axes and Spaces.
@@ -30,10 +33,15 @@ public class Spaces {
 		nameToAxis = new HashMap<>();
 		axesToSpaces = new HashMap<>();
 	}
-	
+
 	public Spaces( Collection<Space> spaceList ) {
 		this();
 		addAll( spaceList );
+	}
+
+	public Spaces( Stream<Space> spaces ) {
+		this();
+		addAll( spaces );
 	}
 
 	public Stream<Space> spaces() {
@@ -42,6 +50,13 @@ public class Spaces {
 
 	public Stream<Axis> axes() {
 		return nameToAxis.entrySet().stream().map(e -> e.getValue());
+	}
+
+	public Axis[] axesFromLabels(String... axisLabels )
+	{
+		return Arrays.stream(axisLabels).map( l -> {
+			return nameToAxis.get(l);
+		}).toArray( Axis[]::new );
 	}
 
 	public Spaces( Space[] spaces ) {
@@ -54,6 +69,11 @@ public class Spaces {
 	{
 		for( Space s : spaces )
 			add( s );
+	}
+
+	public void addAll( Stream<Space> spaces )
+	{
+		spaces.forEach( s -> add(s) );
 	}
 
 	/**
@@ -200,6 +220,119 @@ public class Spaces {
 
 	public Axis getAxis( final String name ) {
 		return nameToAxis.get(name);
+	}
+
+	public Space spaceFrom( String[] axes ) {
+		return getSpaceFromAxes(axes);
+	}
+
+	public Space spaceFrom( String name ) {
+		return getSpace(name);
+	}
+
+	public String[] getInputAxes( CoordinateTransform<?> t )
+	{
+		String[] inAxes = null;
+		if( t.getInputAxes() != null )
+			inAxes = t.getInputAxes();
+		else if( t.getInputSpace() != null )
+			inAxes = getSpace(t.getInputSpace()).getAxisLabels();
+
+		return inAxes;
+	}
+
+	public String[] getOutputAxes( CoordinateTransform<?> t )
+	{
+		String[] outAxes = null;
+		if( t.getOutputAxes() != null )
+			outAxes = t.getOutputAxes();
+		else if( t.getOutputSpace() != null )
+			outAxes = getSpace(t.getOutputSpace()).getAxisLabels();
+
+		return outAxes;
+	}
+
+	public boolean inputIsSubspace( CoordinateTransform<?> t, Space s ) {
+		return s.isSubspaceOf( getSpace(t.getInputSpace()));
+	}
+
+	public boolean inputHasAxis( CoordinateTransform<?> t, String axisLabel ) {
+		return getSpace(t.getInputSpace()).hasAxis(axisLabel);
+	}
+
+	public boolean outputIsSubspace( CoordinateTransform<?> t, Space s ) {
+		if ( t.getOutputAxes() != null )
+			return s.isSubspaceOf(t.getOutputAxes());
+		else if( t.getOutputSpace() != null )
+			return s.isSubspaceOf( getSpace(t.getOutputSpace()));
+		else
+			return false;
+	}
+	
+	public boolean outputIsSuperspace( CoordinateTransform<?> t, Space s ) {
+		if ( t.getOutputAxes() != null )
+			return s.isSuperspaceOf(t.getOutputAxes());
+		else if( t.getOutputSpace() != null )
+			return s.isSuperspaceOf( getSpace(t.getOutputSpace()));
+		else
+			return false;
+	}
+
+	public boolean outputHasAxis( CoordinateTransform<?> t, String axisLabel ) {
+		if( t.getOutputAxes() != null )
+			return Arrays.stream( t.getOutputAxes() ).anyMatch( x -> x.equals(axisLabel));
+		else if( t.getOutputSpace() != null )
+			return getSpace(t.getOutputSpace()).hasAxis(axisLabel);
+		else
+			return false;
+	}
+	
+	public boolean outputMatchesAny( CoordinateTransform<?> t, Set<String> axisLabels ) {
+		String[] outAxes = null;
+		if( t.getOutputAxes() != null )
+			outAxes = t.getOutputAxes();
+		else if( t.getOutputSpace() != null )
+			outAxes = getSpace(t.getOutputSpace()).getAxisLabels();
+		else
+			return false;
+
+		for( String axisLabel : t.getOutputAxes())
+			if( axisLabels.contains(axisLabel ))
+				return true;
+
+		return false;
+	}
+
+	public boolean outputMatchesAny( CoordinateTransform<?> t, String[] axisLabels ) {
+		String[] outAxes = null;
+		if( t.getOutputAxes() != null )
+			outAxes = t.getOutputAxes();
+		else if( t.getOutputSpace() != null )
+			outAxes = getSpace(t.getOutputSpace()).getAxisLabels();
+		else
+			return false;
+
+		for( String axisLabel : t.getOutputAxes())
+			if( Arrays.stream( axisLabels ).filter( x -> x.equals(axisLabel)).count() > 0 )
+				return true;
+
+		return false;
+	}
+	
+	public <T extends AbstractCoordinateTransform<?>> void updateTransforms( Stream<T> transforms )
+	{
+		transforms.forEach( t -> {
+			if( t.getInputSpace() != null )
+				t.setInputSpace( nameToSpace.get( t.getInputSpace() ));
+			else if ( t.getInputAxes() != null )
+				t.setInputSpace( new Space("", axesFromLabels( t.getInputAxes()) ));
+
+			if( t.getOutputSpace() != null )
+				t.setOutputSpace( nameToSpace.get( t.getOutputSpace() ));
+			else if ( t.getOutputAxes() != null )
+				t.setOutputSpace( new Space("", axesFromLabels( t.getOutputAxes()) ));
+		});
+		
 	}
 
 }

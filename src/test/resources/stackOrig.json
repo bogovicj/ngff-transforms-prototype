@@ -1,0 +1,40 @@
+{
+  "spaces": [
+    {
+      "name": "xyczt",
+      "axes": [
+        { "label": "x", "type": "space", "unit": "micrometer", "discrete" : false },
+        { "label": "y", "type": "space", "unit": "micrometer", "discrete" : false },
+        { "label": "c", "type": "channel", "unit": "", "discrete": true },
+        { "label": "z", "type": "space", "unit": "micrometer", "discrete" : false },
+        { "label": "t", "type": "time", "unit": "second", "discrete" : false }
+      ]
+    }
+  ],
+  "transforms": [
+    {
+      "type": "stacked",
+      "name": "stack",
+      "input_space": "",
+      "output_space": "xyczt",
+      "transformations": [
+        {
+          "type": "identity",
+          "input_axes": [ "dim_2" ],
+          "output_axes": [ "c" ]
+        },
+        {
+          "type": "scale",
+          "input_axes": [ "dim_4" ],
+          "output_axes": [ "t" ]
+        },
+        {
+          "affine": [ 1.1014748899286995, -0.003356093187801388, -0.015070089856986017, 4.177888664571422, 0.00014930742384645888, 0.9563570184920926, -0.1554184181171034, 6.584435749976974, -0.00025178851007148946, 0.024026315573955494, 1.8153162032371448, -5.290659956068192 ],
+          "type": "affine",
+          "input_axes": [ "dim_0", "dim_1", "dim_3" ],
+          "output_axes": [ "x", "y", "z" ]
+        }
+      ]
+    }
+  ]
+}

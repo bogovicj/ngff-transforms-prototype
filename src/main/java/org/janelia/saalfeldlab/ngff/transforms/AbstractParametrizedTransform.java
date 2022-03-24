@@ -1,6 +1,8 @@
 package org.janelia.saalfeldlab.ngff.transforms;
 
-public abstract class AbstractParametrizedTransform<T,P> extends AbstractCoordinateTransform<T> implements ParametrizedTransform<T,P> {
+import net.imglib2.realtransform.RealTransform;
+
+public abstract class AbstractParametrizedTransform<T extends RealTransform,P> extends AbstractCoordinateTransform<T> implements ParametrizedTransform<T,P> {
 
 	private final String path;
 	

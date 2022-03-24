@@ -6,4 +6,14 @@ public interface RealCoordinateTransform<T extends RealTransform> extends Coordi
 
 	@Override
 	public T getTransform();
+	
+//	public default RealCoordinate apply( final RealCoordinate pt ) {
+//
+//		T t = getTransform();
+//
+//		RealCoordinate out = new RealCoordinate(t.numTargetDimensions());
+//		// this needs to work on subspaces correctly
+//
+//		return out;
+//	}
 }

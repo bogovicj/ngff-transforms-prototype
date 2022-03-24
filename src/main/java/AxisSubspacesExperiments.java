@@ -2,9 +2,11 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.janelia.saalfeldlab.ngff.SpacesTransforms;
 import org.janelia.saalfeldlab.ngff.axes.AxisUtils;
@@ -22,6 +24,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import net.imglib2.RealPoint;
+import net.imglib2.algorithm.componenttree.BuildComponentTree;
 import net.imglib2.realtransform.RealComponentMappingTransform;
 import net.imglib2.realtransform.RealInvertibleComponentMappingTransform;
 import net.imglib2.realtransform.RealTransform;
@@ -37,7 +40,9 @@ public class AxisSubspacesExperiments {
 //		final String testDataF = "src/test/resources/sepXY.json";
 //		final String testDataF = "src/test/resources/XcrossY.json";
 //		final String testDataF = "src/test/resources/XcrossY.json";
-		final String testDataF = "src/test/resources/stack.json";
+//		final String testDataF = "src/test/resources/stack.json";
+//		final String testDataF = "src/test/resources/noStack.json";
+		final String testDataF = "src/test/resources/multiLevelAxisGraph.json";
 
 		SpacesTransforms st = SpacesTransforms.loadFile(testDataF);
 		System.out.println( st );
@@ -47,11 +52,88 @@ public class AxisSubspacesExperiments {
 
 //		stackedTest( st );
 
-		stackedSubspaceTest( st );
+//		stackedSubspaceTest( st );
 
 //		stackedTransformTest();
 
 //		permutationTest();
+		
+//		subspaceNoStackTest( st );
+
+		multilevelAxisGraphTest( st );
+	}
+
+	public static void multilevelAxisGraphTest( SpacesTransforms st  )
+	{
+		System.out.println( "multilevelAxisGraphTest" );
+		System.out.println( st );
+
+		TransformGraph g = st.buildTransformGraph(5);
+		System.out.println( g );
+
+		Space arraySpace = g.getSpaces().getSpace("");
+		Space xyczt = g.getSpaces().getSpace("xyczt");
+
+		CoordinateTransform<?> xfm = buildTransformFromAxes( 
+				g.getSpaces(), Arrays.asList(st.transforms),
+				arraySpace, xyczt );
+
+		System.out.println( xfm );
+		
+	}
+
+	public static void subspaceNoStackTest( SpacesTransforms st  )
+	{
+		System.out.println("subspaceNoStackTest" );
+
+		TransformGraph g = st.buildTransformGraph(5);
+		System.out.println( g );
+
+		Optional<TransformPath> path = g.path("", "xyczt");
+//		p.ifPresent( System.out::println );
+		System.out.println( path ); // this optional is empty
+		System.out.println( "" );
+		
+		Space arraySpace = g.getSpaces().getSpace("");
+		Space xyczt = g.getSpaces().getSpace("xyczt");
+		System.out.println( arraySpace );
+		System.out.println( xyczt );
+
+//		CoordinateTransform<?> xfm = g.buildImpliedTransform( arraySpace, xyczt );
+//		System.out.println( xfm );
+
+		CoordinateTransform<?> xfm = g.buildTransformFromAxes( arraySpace, xyczt );
+		System.out.println( xfm );
+
+		RealPoint p = new RealPoint( -1.0, 1.0, 2.0, 3.0, 4.0 );
+		RealPoint q = new RealPoint( 0.0, 0.0, 0.0, 0.0, 0.0 );
+		
+		((RealTransform)xfm.getTransform()).apply(p, q);
+		System.out.println( "p: " + p );
+		System.out.println( "q: " + q );
+
+
+//		println( g.getTransforms().stream().count() );
+//		
+//		for( String l : xyczt.getAxisLabels() )
+//		{
+//			System.out.println( l );
+//			 Stream<CoordinateTransform<?>> ttmp = g.getTransforms().stream().filter( t -> {
+//					return g.outputHasAxis( t, l );
+//				});
+//			 ttmp.forEach( x -> println(x) );
+//
+//			 System.out.println( " " );
+//		}
+
+//		g.getTransforms().forEach( System.out::println );
+
+
+	}
+	
+	public static void println( Object o )
+	{
+		System.out.println( o );
 	}
 
 	public static void permutationTest()
@@ -203,6 +285,176 @@ public class AxisSubspacesExperiments {
 		System.out.println( "space \"xy\"" );
 		System.out.println( xyspaces.size());
 		System.out.println( xyspaces.get(0));
+	}
+	
+	public static CoordinateTransform<?> buildTransformFromAxes( 
+			Spaces spaces, List<CoordinateTransform<?>> transforms,
+			final Space from, final Space to )
+	{
+		final List<CoordinateTransform<?>> tList = new ArrayList<>();
+		
+		// keep track of all input and output axes 
+		final HashSet<String> transformInputAxes = new HashSet<>();
+		final HashSet<String> transformOutputAxes = new HashSet<>();
+
+		final String[] toAxes = to.getAxisLabels();
+		HashSet<String> toAxesRemaining = new HashSet<>();
+		toAxesRemaining.addAll( Arrays.asList( toAxes ));
+
+		final String[] fromAxes = from.getAxisLabels();
+		HashSet<String> fromAxesRemaining = new HashSet<>();
+		fromAxesRemaining.addAll( Arrays.asList( fromAxes ));
+
+		while( !fromAxesRemaining.isEmpty() )
+		{
+			boolean anyChanged = false;
+			for( CoordinateTransform<?> t : transforms )
+			{
+				String[] tInputs = spaces.getInputAxes(t);
+				String[] tOutputs = spaces.getOutputAxes(t);
+				
+				System.out.println( "t in : " + Arrays.toString(tInputs) );
+				System.out.println( "t out: " + Arrays.toString(tOutputs) );
+				
+				if( tList.contains( t ))
+					continue;
+
+				// if 
+				if( spaces.outputMatchesAny(t, toAxesRemaining))
+				{
+					if( AxisUtils.containsAny( transformOutputAxes, tOutputs ))
+					{
+						System.err.println( "warning: multiple transforms define same output axes");
+						return null;
+					}
+
+					if( AxisUtils.containsAny( transformInputAxes, tInputs ))
+					{
+						System.err.println( "warning: multiple transforms define same output axes");
+						return null;
+					}
+
+					for( String out : tOutputs )
+					{
+						if( !toAxesRemaining.remove(out) )
+							fromAxesRemaining.add(out);
+					}
+					
+					for( String in : tInputs )
+					{
+						if( !fromAxesRemaining.remove(in) )
+							toAxesRemaining.add(in);
+					}
+
+					anyChanged = true;
+					tList.add(t);
+
+					transformOutputAxes.addAll( Arrays.asList( tOutputs ));
+					transformInputAxes.addAll( Arrays.asList( tInputs ));
+				}
+				System.out.println( " " );
+			}
+
+			// if anyChanged = false, it means we
+			// iterated through all transformations without making any progress,
+			// so no progress can be made, so terminate.
+			if( !anyChanged )
+				break;
+		}
+		
+		if( !fromAxesRemaining.isEmpty() )
+		{
+			System.err.println( "uh oh, path to some source axes has not been found");
+		}
+
+		final StackedCoordinateTransform totalTransform = new StackedCoordinateTransform(
+				from.getName() + " > " + to.getName(), from.getName(), to.getName(), tList);	
+
+		totalTransform.setSpaces(spaces);
+		totalTransform.buildTransform();
+
+		return totalTransform;
+	}
+
+	public static CoordinateTransform<?> buildTransformFromAxesOLD( 
+			Spaces spaces, List<CoordinateTransform<?>> transforms,
+			final Space from, final Space to )
+	{
+		final List<CoordinateTransform<?>> tList = new ArrayList<>();
+		final HashSet<String> outAxes = new HashSet<>();
+		
+		// keep track of all input axes used by 
+		final HashSet<String> transformInputAxes = new HashSet<>();
+
+		// keep track of what inputs 
+		final HashSet<String> fromAxesRemaining = new HashSet<>();
+		fromAxesRemaining.addAll( Arrays.asList(from.getAxisLabels()) ); 
+
+		final String[] outputAxes = to.getAxisLabels();
+		HashSet<String> outputAxesRemaining = new HashSet<>();
+		outputAxesRemaining.addAll( Arrays.asList( outputAxes ));
+
+		while( !fromAxesRemaining.isEmpty() )
+		{
+			boolean anyChanged = false;
+			for( CoordinateTransform<?> t : transforms )
+			{
+				String[] tInputs = spaces.getInputAxes(t);
+				String[] tOutputs = spaces.getOutputAxes(t);
+				
+				if( tList.contains( t ))
+					continue;
+
+				// if 
+				if( spaces.outputMatchesAny(t, outputAxesRemaining))
+				{
+					if( AxisUtils.containsAny( outAxes, tOutputs ))
+					{
+						System.err.println( "warning: multiple transforms define same output axes");
+						return null;
+					}
+
+					if( AxisUtils.containsAny( transformInputAxes, tInputs ))
+					{
+						System.err.println( "warning: multiple transforms define same output axes");
+						return null;
+					}
+					
+					for( String in : tInputs )
+					{
+						if( !fromAxesRemaining.remove(in) )
+							outputAxesRemaining.add(in);
+					}
+
+					anyChanged = true;
+					tList.add(t);
+
+					outAxes.addAll( Arrays.asList( tOutputs ));
+
+					transformInputAxes.addAll( Arrays.asList( tInputs ));
+				}
+
+			}
+
+			// if anyChanged = false, it means we
+			// iterated through all transformations without making any progress,
+			// so no progress can be made, so terminate.
+			if( !anyChanged )
+				break;
+		}
+		
+		if( !fromAxesRemaining.isEmpty() )
+		{
+			System.err.println( "uh oh, path to some source axes has not been found");
+		}
+
+		final StackedCoordinateTransform totalTransform = new StackedCoordinateTransform(
+				from.getName() + " > " + to.getName(), from.getName(), to.getName(), tList);	
+
+		totalTransform.setSpaces(spaces);
+		totalTransform.buildTransform();
+
+		return totalTransform;
 	}
 
 }

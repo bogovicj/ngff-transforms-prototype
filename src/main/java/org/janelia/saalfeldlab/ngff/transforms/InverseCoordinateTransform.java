@@ -1,6 +1,8 @@
 package org.janelia.saalfeldlab.ngff.transforms;
 
-public class InverseCoordinateTransform<T,C extends CoordinateTransform<T>> extends AbstractCoordinateTransform<T> {
+import net.imglib2.realtransform.RealTransform;
+
+public class InverseCoordinateTransform<T extends RealTransform,C extends CoordinateTransform<T>> extends AbstractCoordinateTransform<T> {
 
 	protected C transform;
 

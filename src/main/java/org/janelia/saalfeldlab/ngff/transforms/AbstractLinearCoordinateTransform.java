@@ -23,6 +23,11 @@ public abstract class AbstractLinearCoordinateTransform<T extends AffineGet,P> e
 			String inputSpace, String outputSpace ) {
 		super( type, name, parameterPath, inputSpace, outputSpace );
 	}
+	
+	public AbstractLinearCoordinateTransform( String type, String name, String parameterPath, 
+			String[] inputAxes, String[] outputAxes ) {
+		super( type, name, parameterPath, inputAxes, outputAxes );
+	}
 
 	@Override
 	public abstract T getTransform();

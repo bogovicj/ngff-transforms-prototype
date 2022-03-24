@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import org.janelia.saalfeldlab.n5.metadata.axes.AxisUtils;
 import org.janelia.saalfeldlab.ngff.spaces.Spaces;
 
-import net.imglib2.RealPoint;
 import net.imglib2.realtransform.RealComponentMappingTransform;
 import net.imglib2.realtransform.RealTransform;
 import net.imglib2.realtransform.RealTransformSequence;

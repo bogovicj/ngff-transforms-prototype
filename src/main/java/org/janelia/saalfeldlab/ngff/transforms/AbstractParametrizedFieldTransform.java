@@ -10,11 +10,12 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.realtransform.InvertibleRealTransform;
+import net.imglib2.realtransform.RealTransform;
 import net.imglib2.realtransform.RealTransformRealRandomAccessible;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.view.Views;
 
-public abstract class AbstractParametrizedFieldTransform<T,V extends NumericType<V>> extends AbstractParametrizedTransform<T,RealRandomAccessible<V>[]> {
+public abstract class AbstractParametrizedFieldTransform<T extends RealTransform,V extends NumericType<V>> extends AbstractParametrizedTransform<T,RealRandomAccessible<V>[]> {
 	
 	protected transient RealRandomAccessible<V>[] fields;
 

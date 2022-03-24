@@ -2,6 +2,12 @@ package org.janelia.saalfeldlab.ngff.axes;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.transform.integer.MixedTransform;
@@ -51,6 +57,14 @@ public class AxisUtils {
 		return p;
 	}
 
+	public static Axis[] buildAxes( String... labels )
+	{
+		return Arrays.stream(labels).map( x -> {
+			String type = getDefaultType( x );
+			return new Axis( x, type, "", type.equals("channel") );
+		}).toArray( Axis[]::new );
+	}
+
 	/**
 	 * Finds and returns a permutation p such that source[p[i]] equals target[i]
 	 * 
@@ -92,6 +106,53 @@ public class AxisUtils {
 				p[i] = j++;
 	}
 	
+	/**
+	 * Turns a length p.length permutation into a length N permutation,
+	 * by returning a new permutation whose first p.length indexes come from p,
+	 * and that contains all integers from [0,N-1]. 
+	 * 
+	 * If a p of length N is passed, it is passed to fillPermutation( p ),
+	 * then returned.
+	 * 
+	 * @param p the permutation
+	 * @param N the total size
+	 */
+	public static int[] fillPermutation( int[] p, int N ) {
+		if( p.length == N )
+		{
+			fillPermutation( p );
+			return p;
+		}
+		else {
+			int[] pfilled = new int[ N ];
+			SortedSet<Integer> remainingIndexes = new TreeSet<>();
+			remainingIndexes.addAll( IntStream.range(0, N).boxed().collect(Collectors.toList()));
+
+			for( int i = 0; i < N; i++)
+			{
+				if( i < p.length )
+				{
+					pfilled[i] = p[i];
+					remainingIndexes.remove(p[i]);
+				}
+				else
+					pfilled[i] = -1;
+			}
+
+			for( int i = 0; i < N; i++)
+			{
+				if( pfilled[i] == -1 )
+				{
+					int j = remainingIndexes.first();
+					remainingIndexes.remove( j );
+					pfilled[i] = j;
+				}
+			}
+
+			return pfilled;
+		}
+	}
+
 	public static boolean isIdentityPermutation( final int[] p )
 	{
 		for( int i = 0; i < p.length; i++ )
@@ -211,4 +272,30 @@ public class AxisUtils {
 		}
 	}
 	
+	/**
+	 * Returns true if any elements of array are contained in the set
+	 * @param set the set
+	 * @param array the array
+	 * @return
+	 */
+	public static <T> boolean containsAny( Set<T> set, T[] array )
+	{
+		for( T t : array )
+			if( set.contains( t ))
+				return true;
+		
+		return false;
+	}
+	
+	/**
+	 * Returns true if any elements of array  equal t
+	 * @param t some element
+	 * @param array the array
+	 * @return true if array contains t
+	 */
+	public static <T> boolean contains( T t, T[] array )
+	{
+		return Arrays.stream(array).anyMatch( x -> x.equals(t) );
+	}
+
 }

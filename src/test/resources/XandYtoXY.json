@@ -3,40 +3,20 @@
     {
       "name": "xy",
       "axes": [
-        {
-          "type": "space",
-          "label": "x",
-          "unit": "micrometer",
-          "discrete": false
-        },
-        {
-          "type": "space",
-          "label": "y",
-          "unit": "micrometer",
-          "discrete": false
-        }
+        { "type": "space", "label": "x", "unit": "micrometer", "discrete": false },
+        { "type": "space", "label": "y", "unit": "micrometer", "discrete": false }
       ]
     },
     {
       "name": "xspace",
       "axes": [
-        {
-          "type": "space",
-          "label": "x",
-          "unit": "micrometer",
-          "discrete": false
-        }
+        { "type": "space", "label": "x", "unit": "micrometer", "discrete": false }
       ]
     },
     {
       "name": "yspace",
       "axes": [
-        {
-          "type": "space",
-          "label": "y",
-          "unit": "micrometer",
-          "discrete": false
-        }
+        { "type": "space", "label": "y", "unit": "micrometer", "discrete": false }
       ]
     }
   ],

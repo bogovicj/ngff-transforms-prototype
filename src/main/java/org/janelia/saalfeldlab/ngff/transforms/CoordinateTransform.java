@@ -1,6 +1,7 @@
 package org.janelia.saalfeldlab.ngff.transforms;
 
 import org.janelia.saalfeldlab.n5.N5Reader;
+import org.janelia.saalfeldlab.ngff.spaces.RealCoordinate;
 
 public interface CoordinateTransform<T> {
 
@@ -19,4 +20,7 @@ public interface CoordinateTransform<T> {
 	public String[] getInputAxes();
 
 	public String[] getOutputAxes();
+	
+	public RealCoordinate apply( RealCoordinate src, RealCoordinate dst );
+
 }

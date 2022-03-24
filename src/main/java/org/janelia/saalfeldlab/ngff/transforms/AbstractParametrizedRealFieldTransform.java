@@ -8,10 +8,11 @@ import org.janelia.saalfeldlab.n5.imglib2.N5Utils;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
+import net.imglib2.realtransform.RealTransform;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.view.Views;
 
-public abstract class AbstractParametrizedRealFieldTransform<T,P,V extends NumericType<V>> extends AbstractParametrizedTransform<T,RealRandomAccessible<V>[]> {
+public abstract class AbstractParametrizedRealFieldTransform<T extends RealTransform,P,V extends NumericType<V>> extends AbstractParametrizedTransform<T,RealRandomAccessible<V>[]> {
 	
 	protected transient RealRandomAccessible<V>[] fields;
 

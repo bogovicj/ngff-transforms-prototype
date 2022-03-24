@@ -15,6 +15,21 @@ public class TranslationCoordinateTransform extends AbstractLinearCoordinateTran
 
 	public transient AffineGet transform;
 
+	public TranslationCoordinateTransform( String name, 
+			final double[] translation) {
+		super("translation", name, null, null );
+		this.translation = translation;
+		buildTransform( translation );
+	}
+
+	public TranslationCoordinateTransform( String name, 
+			final String[] inputAxes, String[] outputAxes,
+			final double[] translation) {
+		super("translation", name, null, inputAxes, outputAxes );
+		this.translation = translation;
+		buildTransform( translation );
+	}
+
 	public TranslationCoordinateTransform( String name, final String inputSpace, final String outputSpace,
 			final double[] translation) {
 		super("translation", name, inputSpace, outputSpace );
