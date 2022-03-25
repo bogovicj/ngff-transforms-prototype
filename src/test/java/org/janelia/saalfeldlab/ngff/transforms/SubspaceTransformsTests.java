@@ -17,6 +17,12 @@ import net.imglib2.RealPoint;
 
 public class SubspaceTransformsTests {
 	
+//	@Test
+//	public void testTransformInferenceMultilevel()
+//	{
+//		
+//	}
+
 	@Test
 	public void testCoordinateTransformSubspaceMultilevel()
 	{
@@ -39,7 +45,7 @@ public class SubspaceTransformsTests {
 
 		spaces.updateTransforms( Stream.of( scaleXYZ, scale4a, scaleT, idC ));
 
-		RealCoordinate pt = new RealCoordinate( new RealPoint( 1, 1, 1, 1, 1 ), in);
+		RealCoordinate pt = new RealCoordinate( new RealPoint( 1.0, 10.0, 100.0, 1000.0, 10000.0 ), in);
 		RealCoordinate tmp1 = new RealCoordinate( 5 );
 		RealCoordinate tmp2 = new RealCoordinate( 5 );
 		RealCoordinate tmp3 = new RealCoordinate( 5 );

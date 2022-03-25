@@ -148,7 +148,7 @@ public class CoordinateTransformAdapter
 		{
 			SequenceCoordinateTransform seq = (SequenceCoordinateTransform)src;
 			JsonArray xfms = new JsonArray();
-			for( RealCoordinateTransform<?> t : seq.getTransformations() ) {
+			for( CoordinateTransform<?> t : seq.getTransformations() ) {
 				Type type = TypeToken.of(t.getClass()).getType();
 				xfms.add(serialize(t, type, context ));
 			}

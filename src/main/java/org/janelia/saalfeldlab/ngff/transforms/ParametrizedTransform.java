@@ -2,7 +2,9 @@ package org.janelia.saalfeldlab.ngff.transforms;
 
 import org.janelia.saalfeldlab.n5.N5Reader;
 
-public interface ParametrizedTransform<T,P> extends CoordinateTransform<T> {
+import net.imglib2.realtransform.RealTransform;
+
+public interface ParametrizedTransform<T extends RealTransform,P> extends CoordinateTransform<T> {
 
 	public String getParameterPath();
 	

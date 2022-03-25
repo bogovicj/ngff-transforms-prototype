@@ -2,6 +2,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -18,6 +19,7 @@ import org.janelia.saalfeldlab.ngff.spaces.Spaces;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransformAdapter;
 import org.janelia.saalfeldlab.ngff.transforms.RealCoordinateTransform;
+import org.janelia.saalfeldlab.ngff.transforms.SequenceCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.StackedCoordinateTransform;
 
 import com.google.gson.Gson;
@@ -366,12 +368,22 @@ public class AxisSubspacesExperiments {
 		{
 			System.err.println( "uh oh, path to some source axes has not been found");
 		}
+		
 
-		final StackedCoordinateTransform totalTransform = new StackedCoordinateTransform(
-				from.getName() + " > " + to.getName(), from.getName(), to.getName(), tList);	
+		// we used to need stacked coordinate transform now we can do with a sequence
+//		final StackedCoordinateTransform totalTransform = new StackedCoordinateTransform(
+//				from.getName() + " > " + to.getName(), from.getName(), to.getName(), tList);	
 
-		totalTransform.setSpaces(spaces);
-		totalTransform.buildTransform();
+
+		final SequenceCoordinateTransform totalTransform = new SequenceCoordinateTransform(
+				"total", "from", "to", tList );
+		// need to reverse the list because
+		// we build it from output to input
+		Collections.reverse(tList);
+		
+
+//		totalTransform.setSpaces(spaces);
+//		totalTransform.buildTransform();
 
 		return totalTransform;
 	}

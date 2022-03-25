@@ -3,7 +3,9 @@ package org.janelia.saalfeldlab.ngff.transforms;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.ngff.spaces.RealCoordinate;
 
-public interface CoordinateTransform<T> {
+import net.imglib2.realtransform.RealTransform;
+
+public interface CoordinateTransform<T extends RealTransform> {
 
 	public T getTransform();
 
