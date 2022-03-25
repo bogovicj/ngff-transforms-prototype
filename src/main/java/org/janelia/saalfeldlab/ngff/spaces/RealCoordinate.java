@@ -14,7 +14,13 @@ public class RealCoordinate extends RealPoint {
 		super( numDimensions );
 		space = new ArraySpace( numDimensions );
 	}
-	
+
+	public RealCoordinate( int numDimensions, Space space )
+	{
+		super( numDimensions );
+		this.space = space;
+	}
+
 	public RealCoordinate( int numDimensions, Axis[] axes )
 	{
 		super( numDimensions );

@@ -318,10 +318,13 @@ public class Spaces {
 
 		return false;
 	}
-	
-	public <T extends AbstractCoordinateTransform<?>> void updateTransforms( Stream<T> transforms )
+
+	public <T extends CoordinateTransform<?>> void updateTransforms( Stream<T> transforms )
 	{
-		transforms.forEach( t -> {
+		transforms.forEach( s -> {
+			if( s instanceof AbstractCoordinateTransform) {
+				AbstractCoordinateTransform t = (AbstractCoordinateTransform)s;
+
 			if( t.getInputSpace() != null )
 				t.setInputSpace( nameToSpace.get( t.getInputSpace() ));
 			else if ( t.getInputAxes() != null )
@@ -331,6 +334,8 @@ public class Spaces {
 				t.setOutputSpace( nameToSpace.get( t.getOutputSpace() ));
 			else if ( t.getOutputAxes() != null )
 				t.setOutputSpace( new Space("", axesFromLabels( t.getOutputAxes()) ));
+
+			}
 		});
 		
 	}

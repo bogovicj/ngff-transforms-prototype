@@ -14,11 +14,13 @@ import org.janelia.saalfeldlab.ngff.axes.AxisUtils;
 import org.janelia.saalfeldlab.ngff.graph.TransformGraph;
 import org.janelia.saalfeldlab.ngff.graph.TransformPath;
 import org.janelia.saalfeldlab.ngff.spaces.ArraySpace;
+import org.janelia.saalfeldlab.ngff.spaces.RealCoordinate;
 import org.janelia.saalfeldlab.ngff.spaces.Space;
 import org.janelia.saalfeldlab.ngff.spaces.Spaces;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransformAdapter;
 import org.janelia.saalfeldlab.ngff.transforms.RealCoordinateTransform;
+import org.janelia.saalfeldlab.ngff.transforms.RealTransformCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.SequenceCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.StackedCoordinateTransform;
 
@@ -67,10 +69,12 @@ public class AxisSubspacesExperiments {
 
 	public static void multilevelAxisGraphTest( SpacesTransforms st  )
 	{
+
 		System.out.println( "multilevelAxisGraphTest" );
 		System.out.println( st );
 
 		TransformGraph g = st.buildTransformGraph(5);
+		g.getSpaces().updateTransforms( g.getTransforms().stream() );
 		System.out.println( g );
 
 		Space arraySpace = g.getSpaces().getSpace("");
@@ -348,6 +352,10 @@ public class AxisSubspacesExperiments {
 							toAxesRemaining.add(in);
 					}
 
+					System.out.println( "fromAxesRemaining: " + fromAxesRemaining );
+					System.out.println( "toAxesRemaining: " + toAxesRemaining );
+					System.out.println( "" );
+
 					anyChanged = true;
 					tList.add(t);
 
@@ -369,23 +377,52 @@ public class AxisSubspacesExperiments {
 			System.err.println( "uh oh, path to some source axes has not been found");
 		}
 		
-
 		// we used to need stacked coordinate transform now we can do with a sequence
 //		final StackedCoordinateTransform totalTransform = new StackedCoordinateTransform(
 //				from.getName() + " > " + to.getName(), from.getName(), to.getName(), tList);	
-
-
-		final SequenceCoordinateTransform totalTransform = new SequenceCoordinateTransform(
-				"total", "from", "to", tList );
-		// need to reverse the list because
-		// we build it from output to input
-		Collections.reverse(tList);
-		
-
 //		totalTransform.setSpaces(spaces);
 //		totalTransform.buildTransform();
 
-		return totalTransform;
+		// need to reverse the list because
+		// we build it from output to input
+		Collections.reverse(tList);
+		final SequenceCoordinateTransform totalTransform = new SequenceCoordinateTransform( "total", "from", "to", tList );
+		spaces.updateTransforms( Stream.of( totalTransform ) );
+
+
+		RealCoordinate tmpPtSrc = new RealCoordinate( from.numDimensions(), from );
+		RealCoordinate tmpPtDst = new RealCoordinate( to.numDimensions() );
+		totalTransform.apply( tmpPtSrc, tmpPtDst );
+		System.out.println( "dst : " + tmpPtDst.getSpace() );
+		
+		if( to.axesLabelsMatch( tmpPtDst.getSpace().getAxisLabels() ))
+			return totalTransform;
+		else if ( to.axesEquals( tmpPtDst.getSpace() ) )
+		{
+			String[] inAxisLabels = tmpPtDst.getSpace().getAxisLabels();
+			String[] outAxisLabels = to.getAxisLabels();
+			// go from the transforms output to the output axis order
+			final int[] outPermParams = AxisUtils.findPermutation( inAxisLabels, outAxisLabels );
+
+			RealComponentMappingTransform perm = new RealComponentMappingTransform( outPermParams.length, outPermParams );
+			RealTransformCoordinateTransform< RealComponentMappingTransform > post = new RealTransformCoordinateTransform< RealComponentMappingTransform >( "", inAxisLabels, outAxisLabels, perm );
+			spaces.updateTransforms( Stream.of( post ) );
+
+			tList.add( post );
+			final SequenceCoordinateTransform totalTransformPerm = new SequenceCoordinateTransform( "total", "from", "to", tList );
+			spaces.updateTransforms( Stream.of( totalTransformPerm ) );
+
+			totalTransformPerm.apply( tmpPtSrc, tmpPtDst );
+			System.out.println( "dst after perm: " + tmpPtDst.getSpace() );
+
+			return totalTransformPerm;
+		}
+		else
+		{
+			System.err.println("theres a problem");
+			return null;
+		}
+
 	}
 
 	public static CoordinateTransform<?> buildTransformFromAxesOLD( 
