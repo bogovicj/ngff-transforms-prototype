@@ -1,0 +1,81 @@
+{
+  "spaces": [
+    {
+      "name": "xyczt",
+      "axes": [
+        { "label": "x", "type": "space", "unit": "micrometer", "discrete" : false },
+        { "label": "y", "type": "space", "unit": "micrometer", "discrete" : false },
+        { "label": "c", "type": "channel", "unit": "", "discrete": true },
+        { "label": "z", "type": "space", "unit": "micrometer", "discrete" : false },
+        { "label": "t", "type": "time", "unit": "second", "discrete" : false }
+      ]
+    },
+    {
+      "name": "lasct",
+      "axes": [
+        { "label": "lr", "type": "space", "unit": "micrometer", "discrete" : false },
+        { "label": "ap", "type": "space", "unit": "micrometer", "discrete" : false },
+        { "label": "is", "type": "space", "unit": "micrometer", "discrete" : false },
+        { "label": "c", "type": "channel", "unit": "", "discrete": true },
+        { "label": "t", "type": "time", "unit": "second", "discrete" : false }
+      ]
+    },
+    {
+      "name": "ctxy",
+      "axes": [
+        { "label": "c", "type": "channel", "unit": "", "discrete": true },
+        { "label": "t", "type": "time", "unit": "second", "discrete" : false },
+        { "label": "x", "type": "space", "unit": "micrometer", "discrete" : false },
+        { "label": "y", "type": "space", "unit": "micrometer", "discrete" : false }
+      ]
+    }
+  ],
+  "transforms": [
+        {
+          "name" : "4>a",
+          "type": "scale",
+          "scale" : [ 5.0 ],
+          "input_axes": [ "dim_4" ],
+          "output_axes": [ "a" ]
+        },
+        {
+          "name" : "a>t",
+          "type": "translation",
+          "translation" : [ -0.5 ],
+          "input_axes": [ "a" ],
+          "output_axes": [ "t" ]
+        },
+        {
+          "name" : "012>xyz",
+          "affine": [ 
+              100.0, 0.0, 0.0, 0.0, 
+              0.0, 200.0, 0.0, 0.0, 
+              0.0, 0.0, 300.0, 0.0 ],
+          "type": "affine",
+          "input_axes": [ "dim_0", "dim_1", "dim_3" ],
+          "output_axes": [ "x", "y", "z" ]
+        },
+        {
+          "name" : "xyz>las",
+          "affine": [ 
+              1.0, 0.2, 0.1, 0.0, 
+              0.2, 1.0, 0.1, 0.0, 
+              0.1, 0.1, 1.0, 0.0 ],
+          "type": "affine",
+          "input_axes": [ "x", "y", "z" ],
+          "output_axes": [ "lr", "ap", "is" ]
+        },
+        {
+          "name" : "2>c",
+          "type": "identity",
+          "input_axes": [ "dim_2" ],
+          "output_axes": [ "c" ]
+        }
+  ],
+  "tmp" : [ 100.0, 10.0, 1.0, 0.5, 
+            20.0, 200.0, 2.0, 0.6, 
+            3.0, 30.0, 300.0, 0.7 ],
+  "tmp2" : [ 100.0, 0.0, 0.0, 0.0, 
+              0.0, 200.0, 0.0, 0.0, 
+              0.0, 0.0, 300.0, 0.0 ]
+}
