@@ -45,7 +45,8 @@ public class MatrixCoordinateTransform extends AbstractParametrizedTransform<Lin
     @Override
     public LinearRealTransform buildTransform( double[] parameters ) {
         this.matrix = parameters;
-        return new LinearRealTransform( numSourceDimensions, numTargetDimensions, matrix );
+        transform = new LinearRealTransform( numSourceDimensions, numTargetDimensions, matrix );
+        return transform;
     }
 
     @Override

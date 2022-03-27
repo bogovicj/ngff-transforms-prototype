@@ -69,6 +69,23 @@ public class SequenceCoordinateTransform extends AbstractCoordinateTransform<Rea
 		int i = 0;
 		for( CoordinateTransform<?> t : transformations )
 		{
+		    int nDimsIncrease = t.getTransform().numTargetDimensions() - t.getTransform().numSourceDimensions();
+			if( nDimsIncrease > 0 )
+			{
+				N += nDimsIncrease;
+//				RealCoordinate b = new RealCoordinate( N );
+//				a.setPosition( tmp );
+//				a.setSpace( );
+//
+//				tmp = a;
+//				other = b;
+			}
+
+			if( other.numDimensions() < N )
+			{
+				other = new RealCoordinate( N );
+			}
+
 			if( i == 0 )
 				t.apply(src, tmp);
 			else if( i == transformations.length - 1 )

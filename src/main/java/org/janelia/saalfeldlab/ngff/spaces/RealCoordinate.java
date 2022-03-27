@@ -57,4 +57,12 @@ public class RealCoordinate extends RealPoint {
 		this.space = space;
 	}
 
+	/*
+	for debugging
+	 */
+	public void positionToIndexes() {
+	for( int i = 0; i < numDimensions(); i++ )
+		setPosition(i, i);
+	}
+
 }

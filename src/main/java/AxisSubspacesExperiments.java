@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 
 import org.janelia.saalfeldlab.ngff.SpacesTransforms;
 import org.janelia.saalfeldlab.ngff.axes.AxisUtils;
+import org.janelia.saalfeldlab.ngff.examples.Common;
 import org.janelia.saalfeldlab.ngff.graph.TransformGraph;
 import org.janelia.saalfeldlab.ngff.graph.TransformPath;
 import org.janelia.saalfeldlab.ngff.spaces.ArraySpace;
@@ -79,12 +80,24 @@ public class AxisSubspacesExperiments {
 		g.getSpaces().updateTransforms( g.getTransforms().stream() );
 		System.out.println( g );
 		System.out.println( g.getTransforms().size() );
-		g.getTransforms().stream().forEach( System.out::println );
+//		g.getTransforms().stream().forEach( System.out::println );
+
+		CoordinateTransform<?> t = g.getTransforms().stream().filter(x -> x.getName().equals("0>ab")).findFirst().get();
+		System.out.println( t );
+
+//		Space space0 = Common.makeSpace("", "0", "", "dim_0");
+//		RealCoordinate p = new RealCoordinate( 1, space0 );
+//		p.setPosition(new double[]{1.0});
+//		RealCoordinate q = new RealCoordinate( 2 );
+//		t.apply(p, q);
+//		System.out.println( p );
+//		System.out.println( q );
+
 
 		Space arraySpace = g.getSpaces().getSpace("");
 		Space tgtSpace = g.getSpaces().getSpace( tgtSpaceName );
 
-		CoordinateTransform<?> xfm = buildTransformFromAxes( 
+		CoordinateTransform<?> xfm = buildTransformFromAxes(
 				g.getSpaces(), Arrays.asList(st.transforms),
 				arraySpace, tgtSpace );
 
@@ -397,6 +410,7 @@ public class AxisSubspacesExperiments {
 
 
 		RealCoordinate tmpPtSrc = new RealCoordinate( from.numDimensions(), from );
+		tmpPtSrc.positionToIndexes();
 		RealCoordinate tmpPtDst = new RealCoordinate( to.numDimensions() );
 		totalTransform.apply( tmpPtSrc, tmpPtDst );
 		System.out.println( "dst : " + tmpPtDst.getSpace() );

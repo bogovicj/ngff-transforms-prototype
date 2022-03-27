@@ -178,8 +178,9 @@ public abstract class AbstractCoordinateTransform<T extends RealTransform> imple
 		totalTransform.apply(src, dst);
 		
 		// copy coordinate values from src for unaffected dimensions
-		for( int i = t.numTargetDimensions(); i < dst.numDimensions(); i++ )
-			dst.setPosition( src.getDoublePosition(perm[i]), i);
+		int j = t.numSourceDimensions();
+		for( int i = t.numTargetDimensions(); i < dst.numDimensions() && j < src.numDimensions(); i++ )
+			dst.setPosition( src.getDoublePosition(perm[j++]), i);
 
 //		Space srcRem = src.getSpace().diff("", getInputSpaceObj());
 //		System.out.println( "srcRem : " + Arrays.toString( srcRem.getAxisLabels() ));
