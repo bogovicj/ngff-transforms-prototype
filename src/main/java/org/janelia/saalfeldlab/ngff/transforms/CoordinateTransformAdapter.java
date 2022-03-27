@@ -61,6 +61,9 @@ public class CoordinateTransformAdapter
 		case("affine"):
 			out = context.deserialize( jobj, AffineCoordinateTransform.class );
 			break;
+		case("matrix"):
+			out = context.deserialize( jobj, MatrixCoordinateTransform.class );
+			break;
 		case("displacement_field"):
 			out = context.deserialize( jobj, DisplacementFieldCoordinateTransform.class );
 			break;

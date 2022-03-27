@@ -46,7 +46,8 @@ public class AxisSubspacesExperiments {
 //		final String testDataF = "src/test/resources/XcrossY.json";
 //		final String testDataF = "src/test/resources/stack.json";
 //		final String testDataF = "src/test/resources/noStack.json";
-		final String testDataF = "src/test/resources/multiLevelAxisGraph.json";
+//		final String testDataF = "src/test/resources/multiLevelAxisGraph.json";
+		final String testDataF = "src/test/resources/multiLevelAxisGraph2.json";
 
 		SpacesTransforms st = SpacesTransforms.loadFile(testDataF);
 		System.out.println( st );
@@ -64,10 +65,11 @@ public class AxisSubspacesExperiments {
 		
 //		subspaceNoStackTest( st );
 
-		multilevelAxisGraphTest( st );
+//		multilevelAxisGraphTest( st, "xyczt" );
+		multilevelAxisGraphTest( st, "z" );
 	}
 
-	public static void multilevelAxisGraphTest( SpacesTransforms st  )
+	public static void multilevelAxisGraphTest( SpacesTransforms st , String tgtSpaceName )
 	{
 
 		System.out.println( "multilevelAxisGraphTest" );
@@ -76,16 +78,17 @@ public class AxisSubspacesExperiments {
 		TransformGraph g = st.buildTransformGraph(5);
 		g.getSpaces().updateTransforms( g.getTransforms().stream() );
 		System.out.println( g );
+		System.out.println( g.getTransforms().size() );
+		g.getTransforms().stream().forEach( System.out::println );
 
 		Space arraySpace = g.getSpaces().getSpace("");
-		Space xyczt = g.getSpaces().getSpace("xyczt");
+		Space tgtSpace = g.getSpaces().getSpace( tgtSpaceName );
 
 		CoordinateTransform<?> xfm = buildTransformFromAxes( 
 				g.getSpaces(), Arrays.asList(st.transforms),
-				arraySpace, xyczt );
+				arraySpace, tgtSpace );
 
 		System.out.println( xfm );
-		
 	}
 
 	public static void subspaceNoStackTest( SpacesTransforms st  )
@@ -310,6 +313,9 @@ public class AxisSubspacesExperiments {
 		final String[] fromAxes = from.getAxisLabels();
 		HashSet<String> fromAxesRemaining = new HashSet<>();
 		fromAxesRemaining.addAll( Arrays.asList( fromAxes ));
+
+		System.out.println( "fromAxesRemaining: " + fromAxesRemaining );
+		System.out.println( "toAxesRemaining: " + toAxesRemaining );
 
 		while( !fromAxesRemaining.isEmpty() )
 		{

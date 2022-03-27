@@ -1,81 +1,69 @@
 {
   "spaces": [
     {
-      "name": "xyczt",
+      "name": "ab",
       "axes": [
-        { "label": "x", "type": "space", "unit": "micrometer", "discrete" : false },
-        { "label": "y", "type": "space", "unit": "micrometer", "discrete" : false },
-        { "label": "c", "type": "channel", "unit": "", "discrete": true },
-        { "label": "z", "type": "space", "unit": "micrometer", "discrete" : false },
-        { "label": "t", "type": "time", "unit": "second", "discrete" : false }
+        { "label": "a", "type": "ab", "unit": "ab's", "discrete" : false },
+        { "label": "b", "type": "ab", "unit": "ab's", "discrete" : false }
       ]
     },
     {
-      "name": "lasct",
+      "name": "cde",
       "axes": [
-        { "label": "lr", "type": "space", "unit": "micrometer", "discrete" : false },
-        { "label": "ap", "type": "space", "unit": "micrometer", "discrete" : false },
-        { "label": "is", "type": "space", "unit": "micrometer", "discrete" : false },
-        { "label": "c", "type": "channel", "unit": "", "discrete": true },
-        { "label": "t", "type": "time", "unit": "second", "discrete" : false }
+        { "label": "c", "type": "cde", "unit": "cde's", "discrete" : false },
+        { "label": "d", "type": "cde", "unit": "cde's", "discrete" : false },
+        { "label": "e", "type": "cde", "unit": "cde's", "discrete" : false }
       ]
     },
     {
-      "name": "ctxy",
+      "name": "f",
       "axes": [
-        { "label": "c", "type": "channel", "unit": "", "discrete": true },
-        { "label": "t", "type": "time", "unit": "second", "discrete" : false },
-        { "label": "x", "type": "space", "unit": "micrometer", "discrete" : false },
-        { "label": "y", "type": "space", "unit": "micrometer", "discrete" : false }
+        { "label": "f", "type": "f", "unit": "f's", "discrete": false }
+      ]
+    },
+    {
+      "name": "z",
+      "axes": [
+        { "label": "z", "type": "z", "unit": "z's", "discrete": false }
       ]
     }
   ],
   "transforms": [
-        {
-          "name" : "4>a",
-          "type": "scale",
-          "scale" : [ 5.0 ],
-          "input_axes": [ "dim_4" ],
-          "output_axes": [ "a" ]
-        },
-        {
-          "name" : "a>t",
-          "type": "translation",
-          "translation" : [ -0.5 ],
-          "input_axes": [ "a" ],
-          "output_axes": [ "t" ]
-        },
-        {
-          "name" : "012>xyz",
-          "affine": [ 
-              100.0, 0.0, 0.0, 0.0, 
-              0.0, 200.0, 0.0, 0.0, 
-              0.0, 0.0, 300.0, 0.0 ],
-          "type": "affine",
-          "input_axes": [ "dim_0", "dim_1", "dim_3" ],
-          "output_axes": [ "x", "y", "z" ]
-        },
-        {
-          "name" : "xyz>las",
-          "affine": [ 
-              1.0, 0.2, 0.1, 0.0, 
-              0.2, 1.0, 0.1, 0.0, 
-              0.1, 0.1, 1.0, 0.0 ],
-          "type": "affine",
-          "input_axes": [ "x", "y", "z" ],
-          "output_axes": [ "lr", "ap", "is" ]
-        },
-        {
-          "name" : "2>c",
-          "type": "identity",
-          "input_axes": [ "dim_2" ],
-          "output_axes": [ "c" ]
-        }
-  ],
-  "tmp" : [ 100.0, 10.0, 1.0, 0.5, 
-            20.0, 200.0, 2.0, 0.6, 
-            3.0, 30.0, 300.0, 0.7 ],
-  "tmp2" : [ 100.0, 0.0, 0.0, 0.0, 
-              0.0, 200.0, 0.0, 0.0, 
-              0.0, 0.0, 300.0, 0.0 ]
+      {
+        "name" : "0>ab",
+        "type": "matrix",
+        "matrix" : [ 2.0, 3.0 ],
+        "numSourceDimensions" : 1,
+        "numTargetDimensions" : 2,
+        "input_axes": [ "dim_0" ],
+        "output_axes": [ "a", "b" ]
+      },
+      {
+        "name" : "12>cde",
+        "type": "matrix",
+        "matrix" : [ 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 ],
+        "numSourceDimensions" : 2,
+        "numTargetDimensions" : 3,
+        "input_axes": [ "dim_1", "dim_2" ],
+        "output_axes": [ "c", "d", "e" ]
+      },
+    {
+      "name" : "34>f",
+      "type": "matrix",
+      "matrix" : [ 10.0, 11.0 ],
+      "numSourceDimensions" : 2,
+      "numTargetDimensions" : 1,
+      "input_axes": [ "dim_3", "dim_4" ],
+      "output_axes": [ "f" ]
+    },
+    {
+      "name" : "acf>z",
+      "type": "matrix",
+      "matrix" : [ 1000.0, 1.0, 0.001 ],
+      "numSourceDimensions" : 3,
+      "numTargetDimensions" : 1,
+      "input_axes": [ "a", "c", "f" ],
+      "output_axes": [ "z" ]
+    }
+  ]
 }
