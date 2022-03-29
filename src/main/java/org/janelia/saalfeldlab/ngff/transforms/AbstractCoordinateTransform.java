@@ -192,4 +192,52 @@ public abstract class AbstractCoordinateTransform<T extends RealTransform> imple
 		return dst;
 	}
 
+	public RealCoordinate applyAppend( final RealCoordinate src ) {
+
+		// assumes that no 
+
+		final T t = getTransform();
+
+		final RealCoordinate dst = new RealCoordinate( t.numTargetDimensions() );
+		if( src.getSpace().axesEquals( getInputSpaceObj() ))
+		{
+			t.apply(src, dst);
+			dst.setSpace(getOutputSpaceObj());
+			return src.append(dst);
+		}
+
+		if( ! getInputSpaceObj().isSubspaceOf( src.getSpace() ))
+		{
+			System.err.println("WARNING: input point's space does not match transforms space.\n" );
+		}
+
+		final int[] inPermParams = AxisUtils.findPermutation(
+				src.getSpace().getAxisLabels(), getInputSpaceObj().getAxisLabels() );
+		
+		int nd = src.numDimensions(); // should this be a max over src, outputDims ?
+		int[] perm = AxisUtils.fillPermutation(inPermParams, nd );
+
+		RealTransformSequence totalTransform = new RealTransformSequence();
+		RealComponentMappingTransform pre = new RealComponentMappingTransform( perm.length, perm );
+		totalTransform.add(pre);
+		totalTransform.add(t);
+		totalTransform.apply(src, dst);
+		dst.setSpace(getOutputSpaceObj());
+		return src.append(dst);
+
+//		// copy coordinate values from src for unaffected dimensions
+//		int j = t.numSourceDimensions();
+//		for( int i = t.numTargetDimensions(); i < dst.numDimensions() && j < src.numDimensions(); i++ )
+//			dst.setPosition( src.getDoublePosition(perm[j++]), i);
+//
+////		Space srcRem = src.getSpace().diff("", getInputSpaceObj());
+////		System.out.println( "srcRem : " + Arrays.toString( srcRem.getAxisLabels() ));
+//
+//		dst.setSpace(
+//				getOutputSpaceObj().union("", 
+//						src.getSpace().diff("", getInputSpaceObj())));
+//
+//		return dst;
+	}
+
 }

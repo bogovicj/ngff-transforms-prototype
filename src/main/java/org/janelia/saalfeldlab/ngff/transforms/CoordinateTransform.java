@@ -25,4 +25,6 @@ public interface CoordinateTransform<T extends RealTransform> {
 	
 	public RealCoordinate apply( RealCoordinate src, RealCoordinate dst );
 
+	public RealCoordinate applyAppend( RealCoordinate src );
+
 }

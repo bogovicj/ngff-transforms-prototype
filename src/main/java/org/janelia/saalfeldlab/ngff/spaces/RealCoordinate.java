@@ -35,8 +35,6 @@ public class RealCoordinate extends RealPoint {
 	public RealCoordinate( RealLocalizable p, Axis[] axes )
 	{
 		this( p, new Space( "", axes ));
-//		super(p);
-//		this.space = 
 //		assert( p.numDimensions() == space.getAxes().length);
 	}
 
@@ -45,6 +43,12 @@ public class RealCoordinate extends RealPoint {
 		super(p);
 		this.space = space;
 //		assert( p.numDimensions() == space.getAxes().length);
+	}
+	
+	public double getDoublePosition( String axis )
+	{
+		final int i = getSpace().indexOf(axis);
+		return i >= 0 ? getDoublePosition( i ) : Double.NaN;
 	}
 	
 	public Space getSpace()
@@ -63,6 +67,45 @@ public class RealCoordinate extends RealPoint {
 	public void positionToIndexes() {
 	for( int i = 0; i < numDimensions(); i++ )
 		setPosition(i, i);
+	}
+	
+	public RealCoordinate append( RealCoordinate other )
+	{
+		final Space axisDiff = other.getSpace().diff(null, getSpace());
+		final int N = numDimensions() + axisDiff.numDimensions();
+
+		final Axis[] resultAxes = new Axis[N];
+		final double[] pos = new double[N];
+		int j = 0;
+		for( int i = 0; i < N; i++ )
+		{
+			if( i < numDimensions() )
+			{
+				resultAxes[i] = getSpace().getAxis(i);
+				pos[i] = getDoublePosition(i);
+			}
+			else
+			{
+				resultAxes[i] = other.getSpace().getAxis(j);
+				pos[i] = other.getDoublePosition(j);
+				j++;
+			}
+		}
+
+		final RealCoordinate result = new RealCoordinate( N );
+		result.setSpace(new Space("", resultAxes));
+		result.setPosition(pos);
+
+		return result;
+	}
+
+	public RealCoordinate getSubset( Space subspace )
+	{
+		final RealCoordinate result = new RealCoordinate( subspace.numDimensions() );
+		for( int i = 0; i < result.numDimensions(); i++ )
+			result.setPosition( getDoublePosition( subspace.getAxis(i).getLabel()), i);
+
+		return result;
 	}
 
 }

@@ -14,24 +14,42 @@ import java.io.IOException;
 public class MatrixCoordinateTransform extends AbstractParametrizedTransform<LinearRealTransform,double[]>
 {
 
-    public int numSourceDimensions;
+    protected int numSourceDimensions;
 
-    public int numTargetDimensions;
+    protected int numTargetDimensions;
 
-    public double[] matrix;
+    protected double[] matrix;
 
-    public transient LinearRealTransform transform;
+    protected transient LinearRealTransform transform;
 
     public MatrixCoordinateTransform( final String name, final String inputSpace, final String outputSpace ,
-                                      final double[] matrix) {
+                                      final double[] matrix, int numIn, int numOut ) {
         super("matrix", name, null, inputSpace, outputSpace );
         this.matrix = matrix;
+        this.numSourceDimensions = numIn;
+        this.numTargetDimensions = numOut;
+        buildTransform( matrix );
+    }
+
+    public MatrixCoordinateTransform( final String name, final String[] inputAxes, final String[] outputAxes ,
+                                      final double[] matrix, int numIn, int numOut ) {
+        super("matrix", name, null, inputAxes, outputAxes );
+        this.matrix = matrix;
+        this.numSourceDimensions = numIn;
+        this.numTargetDimensions = numOut;
         buildTransform( matrix );
     }
 
     public MatrixCoordinateTransform(final String name, final N5Reader n5, final String path,
                                      final String inputSpace, final String outputSpace) {
         super("matrix", name, path, inputSpace, outputSpace );
+        this.matrix = getParameters(n5);
+        buildTransform( matrix );
+    }
+
+    public MatrixCoordinateTransform(final String name, final N5Reader n5, final String path,
+                                     final String[] inputAxes, final String[] outputAxes) {
+        super("matrix", name, path, inputAxes, outputAxes );
         this.matrix = getParameters(n5);
         buildTransform( matrix );
     }

@@ -152,6 +152,22 @@ public class AxisUtils {
 			return pfilled;
 		}
 	}
+	
+	public static double[] matrixFromPermutation( final int[] p, final int ncols )
+	{
+		final int nrows = p.length;
+		final double[] mtx = new double[ nrows * ncols ];
+
+		/*
+		 * 	p[i] = j 
+		 * 	means that output i comes from input j
+		 * that means the i-j the element of the matrix is 1
+		 */
+		for( int i = 0; i < p.length; i++ )
+			mtx[ p[i] + ncols * i ] = 1;
+		
+		return mtx;
+	}
 
 	public static boolean isIdentityPermutation( final int[] p )
 	{

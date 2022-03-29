@@ -106,11 +106,12 @@ public class Space {
 	}
 	
 	/**
-	 * Returns a space with the axes
+	 * Returns a space containing the axes of this space
+	 * not also part of the given space
 	 * 
-	 * @param name
-	 * @param space
-	 * @return
+	 * @param name a name for the new space
+	 * @param space the space whose axis will be "subtracted"
+	 * @return the resulting space
 	 */
 	public Space diff( String name, Space space )
 	{

@@ -20,6 +20,7 @@ import org.janelia.saalfeldlab.ngff.spaces.Space;
 import org.janelia.saalfeldlab.ngff.spaces.Spaces;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransformAdapter;
+import org.janelia.saalfeldlab.ngff.transforms.MatrixCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.RealCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.RealTransformCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.SequenceCoordinateTransform;
@@ -65,9 +66,53 @@ public class AxisSubspacesExperiments {
 //		permutationTest();
 		
 //		subspaceNoStackTest( st );
+		
+		permMtxTest();
 
 //		multilevelAxisGraphTest( st, "xyczt" );
-		multilevelAxisGraphTest( st, "z" );
+//		multilevelAxisGraphTest( st, "z" );
+	}
+	
+	public static void permMtxTest()
+	{
+		String[] from = new String[] { "0", "1", "x", "2", "y", "3" };
+		String[] to = new String[] { "x", "y" };
+		
+		/*
+		 * p should be [2,4]
+		 * 
+		 * 
+		 * permMatrix should be
+		 * [ 0, 0, 1, 0, 0, 0, 
+		 *   0, 0, 0, 0, 1, 0 ] 
+		 *   
+		 *   the elements that should equal 1 are (0,2) and (1,4)
+		 *   at indices (2) and 6*1 + 4 = 10
+		 */
+		
+		final int[] p = AxisUtils.findPermutation( from, to );
+		final double[] permMatrix = AxisUtils.matrixFromPermutation(p, from.length );
+		MatrixCoordinateTransform ct = new MatrixCoordinateTransform(
+				"", from, to, permMatrix, 6, 2);
+
+		Space fromSpace = Common.makeSpace("from", "", "", from );
+		Space toSpace = Common.makeSpace("to", "", "", to );
+
+		ct.setInputSpace(fromSpace);
+		ct.setOutputSpace(toSpace);
+
+		RealCoordinate f = new RealCoordinate(6, fromSpace);
+		f.setPosition(new double[] {1, 2, 3, 4, 5, 6});
+
+		RealCoordinate t = new RealCoordinate(2, toSpace);
+		ct.apply(f, t);
+		
+		System.out.println( f );
+		System.out.println( t );
+
+
+
+
 	}
 
 	public static void multilevelAxisGraphTest( SpacesTransforms st , String tgtSpaceName )
@@ -97,7 +142,7 @@ public class AxisSubspacesExperiments {
 		Space arraySpace = g.getSpaces().getSpace("");
 		Space tgtSpace = g.getSpaces().getSpace( tgtSpaceName );
 
-		CoordinateTransform<?> xfm = buildTransformFromAxes(
+		SequenceCoordinateTransform xfm = buildTransformFromAxes(
 				g.getSpaces(), Arrays.asList(st.transforms),
 				arraySpace, tgtSpace );
 
@@ -309,7 +354,7 @@ public class AxisSubspacesExperiments {
 		System.out.println( xyspaces.get(0));
 	}
 	
-	public static CoordinateTransform<?> buildTransformFromAxes( 
+	public static SequenceCoordinateTransform buildTransformFromAxes( 
 			Spaces spaces, List<CoordinateTransform<?>> transforms,
 			final Space from, final Space to )
 	{
@@ -405,43 +450,58 @@ public class AxisSubspacesExperiments {
 		// need to reverse the list because
 		// we build it from output to input
 		Collections.reverse(tList);
-		final SequenceCoordinateTransform totalTransform = new SequenceCoordinateTransform( "total", "from", "to", tList );
-		spaces.updateTransforms( Stream.of( totalTransform ) );
+		final SequenceCoordinateTransform totalTransform = new SequenceCoordinateTransform( "total", from.getName(), to.getName(), tList );
+		totalTransform.setInputSpace(from);
+		totalTransform.setOutputSpace(to);
+//		spaces.updateTransforms( Stream.of( totalTransform ) );
 
 
 		RealCoordinate tmpPtSrc = new RealCoordinate( from.numDimensions(), from );
 		tmpPtSrc.positionToIndexes();
-		RealCoordinate tmpPtDst = new RealCoordinate( to.numDimensions() );
-		totalTransform.apply( tmpPtSrc, tmpPtDst );
+		RealCoordinate tmpPtDst = totalTransform.applyAppend( tmpPtSrc );
 		System.out.println( "dst : " + tmpPtDst.getSpace() );
 		
-		if( to.axesLabelsMatch( tmpPtDst.getSpace().getAxisLabels() ))
-			return totalTransform;
-		else if ( to.axesEquals( tmpPtDst.getSpace() ) )
+		if( to.isSubspaceOf( tmpPtDst.getSpace() ))
 		{
-			String[] inAxisLabels = tmpPtDst.getSpace().getAxisLabels();
-			String[] outAxisLabels = to.getAxisLabels();
-			// go from the transforms output to the output axis order
-			final int[] outPermParams = AxisUtils.findPermutation( inAxisLabels, outAxisLabels );
+			// TODO finish this
+			final int[] p = AxisUtils.findPermutation( tmpPtDst.getSpace().getAxisLabels(), to.getAxisLabels());
+			final double[] permMatrix = AxisUtils.matrixFromPermutation(p, tmpPtDst.getSpace().numDimensions());
 
-			RealComponentMappingTransform perm = new RealComponentMappingTransform( outPermParams.length, outPermParams );
-			RealTransformCoordinateTransform< RealComponentMappingTransform > post = new RealTransformCoordinateTransform< RealComponentMappingTransform >( "", inAxisLabels, outAxisLabels, perm );
-			spaces.updateTransforms( Stream.of( post ) );
-
-			tList.add( post );
-			final SequenceCoordinateTransform totalTransformPerm = new SequenceCoordinateTransform( "total", "from", "to", tList );
-			spaces.updateTransforms( Stream.of( totalTransformPerm ) );
-
-			totalTransformPerm.apply( tmpPtSrc, tmpPtDst );
-			System.out.println( "dst after perm: " + tmpPtDst.getSpace() );
-
-			return totalTransformPerm;
+			return totalTransform;
 		}
 		else
 		{
 			System.err.println("theres a problem");
 			return null;
 		}
+
+//		if( to.axesLabelsMatch( tmpPtDst.getSpace().getAxisLabels() ))
+//			return totalTransform;
+//		else if ( to.axesEquals( tmpPtDst.getSpace() ) )
+//		{
+//			String[] inAxisLabels = tmpPtDst.getSpace().getAxisLabels();
+//			String[] outAxisLabels = to.getAxisLabels();
+//			// go from the transforms output to the output axis order
+//			final int[] outPermParams = AxisUtils.findPermutation( inAxisLabels, outAxisLabels );
+//
+//			RealComponentMappingTransform perm = new RealComponentMappingTransform( outPermParams.length, outPermParams );
+//			RealTransformCoordinateTransform< RealComponentMappingTransform > post = new RealTransformCoordinateTransform< RealComponentMappingTransform >( "", inAxisLabels, outAxisLabels, perm );
+//			spaces.updateTransforms( Stream.of( post ) );
+//
+//			tList.add( post );
+//			final SequenceCoordinateTransform totalTransformPerm = new SequenceCoordinateTransform( "total", "from", "to", tList );
+//			spaces.updateTransforms( Stream.of( totalTransformPerm ) );
+//
+//			totalTransformPerm.apply( tmpPtSrc, tmpPtDst );
+//			System.out.println( "dst after perm: " + tmpPtDst.getSpace() );
+//
+//			return totalTransformPerm;
+//		}
+//		else
+//		{
+//			System.err.println("theres a problem");
+//			return null;
+//		}
 
 	}
 

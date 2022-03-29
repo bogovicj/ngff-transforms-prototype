@@ -50,6 +50,21 @@ public class SequenceCoordinateTransform extends AbstractCoordinateTransform<Rea
 	public CoordinateTransform<?>[] getTransformations() {
 		return transformations;
 	}
+
+	@Override
+	public RealCoordinate applyAppend( final RealCoordinate src )
+	{
+		System.out.println( " ");
+		System.out.println( "sequence apply append");
+		System.out.println( "src space: " + src.getSpace() );
+		RealCoordinate dst = src;
+		for( CoordinateTransform<?> t : transformations )
+		{
+			dst = t.applyAppend(dst);
+			System.out.println( " tmp space: " + dst.getSpace() );
+		}
+		return dst;
+	}
 	
 	@Override
 	public RealCoordinate apply( final RealCoordinate src, final RealCoordinate dst )
