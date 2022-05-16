@@ -51,8 +51,6 @@ public class LinearRealTransform implements RealTransform {
             for( int i = 0; i < numSourceDimensions; i++ )
                 tgt[j] += matrix[k++] * src[i];
 
-            System.out.println( tgt[j]);
-
         }
 
         if( tgt != dst )
