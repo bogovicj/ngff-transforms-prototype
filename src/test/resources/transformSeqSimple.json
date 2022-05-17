@@ -1,0 +1,39 @@
+{
+  "spaces": [
+    {
+      "name": "ab",
+      "axes": [
+        { "label": "a", "type": "ab", "unit": "ab's", "discrete" : false },
+        { "label": "b", "type": "ab", "unit": "ab's", "discrete" : false }
+      ]
+    },
+    {
+      "name": "cde",
+      "axes": [
+        { "label": "c", "type": "cde", "unit": "cde's", "discrete" : false },
+        { "label": "d", "type": "cde", "unit": "cde's", "discrete" : false },
+        { "label": "e", "type": "cde", "unit": "cde's", "discrete" : false }
+      ]
+    }
+  ],
+  "transforms": [
+      {
+        "name" : ">cde",
+        "type": "matrix",
+        "matrix" : [ 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0 ],
+        "numSourceDimensions" : 3,
+        "numTargetDimensions" : 3,
+        "input_space": "",
+        "output_space": "cde"
+      },
+      {
+        "name" : "cde>ab",
+        "type": "matrix",
+        "matrix" : [ 1.0, 1.0, 0.0, 0.0, 0.0, 1.0 ],
+        "numSourceDimensions" : 3,
+        "numTargetDimensions" : 2,
+        "input_space": "cde",
+        "output_space": "ab"
+      }
+  ]
+}

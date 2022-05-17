@@ -2,7 +2,6 @@ package org.janelia.saalfeldlab.ngff.examples;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -74,8 +73,8 @@ import net.imglib2.view.composite.GenericComposite;
 public class LensCorrectionRegistrationExample {
 
 	public static void main(String[] args) throws IOException {
-//		final String root = "/home/john/projects/ngff/transformsExamples/data.zarr";
-		final String root = "/groups/saalfeld/home/bogovicj/projects/ngff/transformsExamples/data.zarr";
+		final String root = "/home/john/projects/ngff/transformsExamples/data.zarr";
+//		final String root = "/groups/saalfeld/home/bogovicj/projects/ngff/transformsExamples/data.zarr";
 		final String baseDataset = "/lensStitchPipeline";
 
 		GsonBuilder gsonBuilder = new GsonBuilder();
@@ -85,7 +84,7 @@ public class LensCorrectionRegistrationExample {
 		makeEverything( zarr, baseDataset );
 //		visTest(zarr, baseDataset);
 
-		System.out.println( "done done");
+		System.out.println( "DONE");
 	}
 
 	public static <T extends RealType<T> & NativeType<T>> AffineTransform3D makeTform( final Interval interval, final double[] res, final double[] center ) {
@@ -172,56 +171,55 @@ public class LensCorrectionRegistrationExample {
 		
 		ArrayList<CoordinateTransform<?>> transforms = new ArrayList<>();
 		
-//		final RandomAccessibleIntervalSource<UnsignedByteType> highResSource = Common.image(type, raw, 
-//				new double[]{0.4, 0.4, 0.4}, 
-//				new double[]{256,256,256}, 
-//				new FinalInterval(512,512,512),
-//				null, 2);
-//
-//		N5Utils.save(highResSource.getSource(0, 0), zarr, String.format("%s/highResSource", baseDataset), blkSize, compression);
+		final RandomAccessibleIntervalSource<UnsignedByteType> highResSource = Common.image(type, raw, 
+				new double[]{0.4, 0.4, 0.4}, 
+				new double[]{256,256,256}, 
+				new FinalInterval(512,512,512),
+				null, 2);
+
+		N5Utils.save(highResSource.getSource(0, 0), zarr, String.format("%s/highResSource", baseDataset), blkSize, compression);
 
 		System.out.println( "write raw tiles");
 		int i = 0;
 		for( double[] center : centers ) {
 			System.out.println( "writing: " + i );
-//			RandomAccessibleIntervalSource<UnsignedByteType> src = Common.image(type, raw, resolution, center, interval, null, 2);
-//			RandomAccessibleInterval<UnsignedByteType> img = src .getSource(0, 0);
+			RandomAccessibleIntervalSource<UnsignedByteType> src = Common.image(type, raw, resolution, center, interval, null, 2);
+			RandomAccessibleInterval<UnsignedByteType> img = src .getSource(0, 0);
 
 			double[] ti = Common.translation( interval, center );
 			CoordinateTransform<?> st = makeScaleTranslation( String.format("tile-%d-stitch", i ), resolution, ti );
 			transforms.add( st );
 
-//			N5Utils.save(img, zarr, String.format("%s/lenscorrected/tile-%d", baseDataset, i ), blkSize, compression);
+			N5Utils.save(img, zarr, String.format("%s/lenscorrected/tile-%d", baseDataset, i ), blkSize, compression);
 			i++;
 		}
 
 		DeformationFieldTransform<DoubleType> xfm2d = buildLensCorrectionTransform( interval, new double[]{127, 127});
 		StackedRealTransform distortion = new StackedRealTransform( xfm2d, new Scale(1.0) );
 
-//		System.out.println( "write distorted tiles");
-//		i = 0;
-//		for( double[] center : centers ) {
-//			System.out.println( "writing distorted: " + i );
-//			RandomAccessibleIntervalSource<UnsignedByteType> src = Common.image(type, raw, resolution, center, interval, distortion, 2);
-//			RandomAccessibleInterval<UnsignedByteType> img = src.getSource(0, 0);
-//			N5Utils.save(img, zarr, String.format("%s/raw/tile-%d", baseDataset, i ), blkSize, compression);
-//			i++;
-//		}
+		System.out.println( "write distorted tiles");
+		i = 0;
+		for( double[] center : centers ) {
+			System.out.println( "writing distorted: " + i );
+			RandomAccessibleIntervalSource<UnsignedByteType> src = Common.image(type, raw, resolution, center, interval, distortion, 2);
+			RandomAccessibleInterval<UnsignedByteType> img = src.getSource(0, 0);
+			N5Utils.save(img, zarr, String.format("%s/raw/tile-%d", baseDataset, i ), blkSize, compression);
+			i++;
+		}
 
-//		WrappedIterativeInvertibleRealTransform<?> ixfm = new WrappedIterativeInvertibleRealTransform<>(xfm2d);
-//		ixfm.getOptimzer().setTolerance(0.05);
-//		ixfm.getOptimzer().setMaxIters(3000);
+		WrappedIterativeInvertibleRealTransform<?> ixfm = new WrappedIterativeInvertibleRealTransform<>(xfm2d);
+		ixfm.getOptimzer().setTolerance(0.05);
+		ixfm.getOptimzer().setMaxIters(3000);
 
 
 		String lensCorrectionTransformPath = String.format("%s/lenscorrected/transform", baseDataset);
-//		Img<FloatType> dfield = makeDfield2dInv( new long[]{256,256}, ixfm );
-//		N5Utils.save(dfield, zarr, lensCorrectionTransformPath, blkSize, compression);
+		Img<FloatType> dfield = makeDfield2dInv( new long[]{256,256}, ixfm );
+		N5Utils.save(dfield, zarr, lensCorrectionTransformPath, blkSize, compression);
 		
 		// make four transforms pointing to teh same thing
 		for( int j = 0; j < 4; j++ )
 		{
 			transforms.add( makeLensCorrectionTransform("lc-"+j, lensCorrectionTransformPath, String.format("%s/raw/tile-%d", baseDataset, j ), "lens-corrected") );
-			
 		}
 
 		final Space[] spaces = makeSpaces().spaces().toArray(Space[]::new);

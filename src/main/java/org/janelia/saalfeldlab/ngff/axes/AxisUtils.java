@@ -1,8 +1,10 @@
 package org.janelia.saalfeldlab.ngff.axes;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -55,6 +57,15 @@ public class AxisUtils {
 				return null;
 		}
 		return p;
+	}
+	
+	public static <T> List<T> permute( List<T> in, int[] p )
+	{
+		ArrayList<T> out = new ArrayList<T>( p.length );
+		for( int i = 0; i < p.length; i++ )
+			out.add( in.get( p[i] ));
+
+		return out;
 	}
 
 	public static Axis[] buildAxes( String... labels )
@@ -313,5 +324,5 @@ public class AxisUtils {
 	{
 		return Arrays.stream(array).anyMatch( x -> x.equals(t) );
 	}
-
+	
 }

@@ -70,7 +70,6 @@ public class BijectiveRegistrationExample {
 //	private String root = "/home/john/projects/ngff/transformsExamples/data.zarr";
 //	private String root = "/groups/saalfeld/home/bogovicj/projects/ngff/transformsExamples/data.zarr";
 
-
 	private String root;
 	private String srcDir;
 
@@ -165,12 +164,12 @@ public class BijectiveRegistrationExample {
 		final SequenceCoordinateTransform fwdTransform = new SequenceCoordinateTransform("jrc2018F-to-fcwb", "jrc2018F", "fcwb", 
 				new RealCoordinateTransform[] {
 					new DisplacementFieldCoordinateTransform(null, baseDataset + "/fwdDfield" ),
-					new AffineCoordinateTransform(null, null, null, params )
+					new AffineCoordinateTransform( params )
 				});
 
 		final SequenceCoordinateTransform invTransform = new SequenceCoordinateTransform("fcwb-to-jrc2018F", "fcwb", "jrc2018F",
 				new RealCoordinateTransform[] {
-					new AffineCoordinateTransform(null, null, null, affine.inverse().getRowPackedCopy()),
+					new AffineCoordinateTransform( affine.inverse().getRowPackedCopy() ),
 					new DisplacementFieldCoordinateTransform(null, baseDataset + "/invDfield" )
 				});
 

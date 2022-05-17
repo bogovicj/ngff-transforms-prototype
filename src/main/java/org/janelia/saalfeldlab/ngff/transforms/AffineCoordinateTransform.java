@@ -13,6 +13,12 @@ public class AffineCoordinateTransform extends AbstractLinearCoordinateTransform
 	public double[] affine;
 
 	public transient AffineGet transform;
+	
+	public AffineCoordinateTransform( final double[] affine) {
+		super("affine");
+		this.affine = affine;
+		buildTransform( affine );
+	}
 
 	public AffineCoordinateTransform( final String name, final String inputSpace, final String outputSpace ,
 			final double[] affine) {
@@ -28,10 +34,16 @@ public class AffineCoordinateTransform extends AbstractLinearCoordinateTransform
 		buildTransform( affine );
 	}
 
+	public AffineCoordinateTransform( final String name, 
+			final String[] inputAxes, final String[] outputAxes,
+			final double[] affine ) {
+		super("affine", name, null, inputAxes, outputAxes  );
+		this.affine = affine;
+	}
+
 	public AffineCoordinateTransform( final String name, final String path,
 			final String inputSpace, final String outputSpace) {
 		super("affine", name, path, inputSpace, outputSpace  );
-		this.affine = null;
 	}
 
 	@Override

@@ -1,11 +1,17 @@
 package org.janelia.saalfeldlab.ngff.transforms;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.ngff.spaces.RealCoordinate;
 
+import net.imglib2.realtransform.RealTransform;
 import net.imglib2.realtransform.RealTransformSequence;
+import net.imglib2.realtransform.SubsetRealTransform;
 
 public class SequenceCoordinateTransform extends AbstractCoordinateTransform<RealTransformSequence> implements RealCoordinateTransform<RealTransformSequence> {
 
@@ -27,14 +33,80 @@ public class SequenceCoordinateTransform extends AbstractCoordinateTransform<Rea
 			this.transformations[i] = transformationList.get( i );
 	}
 
+	public RealTransformSequence getTransformSubspaces()
+	{
+		System.out.println( "getTransform" );
+		ArrayList< String[] > axOrders = axisOrdersForTransform( getTransformations(), getOutputSpaceObj().getAxisLabels() );
+		for( String[] axes : axOrders )
+			System.out.println(String.join(" ", axes ));
+
+		System.out.println( "" );
+		
+		ArrayList< int[] > inIdxes = inputIndexesFromAxisOrders( getTransformations(), axOrders );
+		for( int[] idxs : inIdxes )
+			System.out.println( Arrays.toString( idxs ));
+
+		System.out.println( "" );
+
+		ArrayList< int[] > outIdxes = outputIndexesFromAxisOrders( getTransformations(), axOrders );
+		for( int[] idxs : outIdxes )
+			System.out.println( Arrays.toString( idxs ));
+
+		RealTransformSequence totalTransform = new RealTransformSequence();
+		CoordinateTransform[] tforms = getTransformations();
+		for( int i = 0; i < tforms.length; i++ )
+		{
+			final int[] inIdx = inIdxes.get( i );
+			final int[] outIdx = outIdxes.get( i );
+			System.out.println( "inIdx : " + Arrays.toString( inIdx ));
+			System.out.println( "outIdx: " + Arrays.toString( outIdx ));
+
+			/*
+			 * The else part of this statement would be nice to have but doesn't work in some cases:
+			 * e.g. SubspaceTransformsDemo.ij2xy
+			 * TODO explain further somewhere
+			 */
+//			if( isReindexed( inIdx ) || isReindexed( outIdx ))
+				totalTransform.add( new SubsetRealTransform( tforms[i].getTransform(), inIdx, outIdx ));
+//			else
+//				totalTransform.add( tforms[i].getTransform() );
+		}
+
+		return totalTransform;
+	}
+
 	@Override
 	public RealTransformSequence getTransform()
+	{
+		// with permutations
+		System.out.println( "getTransform" );
+		ArrayList< String[] > axOrders = axisOrdersForTransform( getTransformations(), getOutputSpaceObj().getAxisLabels() );
+		for( String[] axes : axOrders )
+			System.out.println(String.join(" ", axes ));
+
+		RealTransformSequence totalTransform = new RealTransformSequence();
+		CoordinateTransform[] tforms = getTransformations();
+		for( int i = 0; i < tforms.length; i++ )
+		{
+			CoordinateTransform t = tforms[i];
+			totalTransform.add( tforms[i].getTransform() );
+		}
+
+		return totalTransform;
+	}
+
+	public RealTransformSequence getTransformNoSubsets()
 	{
 		RealTransformSequence transform = new RealTransformSequence();
 		for( CoordinateTransform<?> t : getTransformations() )
 			transform.add( t.getTransform() );
 
 		return transform;
+	}
+
+	public RealTransformSequence getTransform( final String[] axes )
+	{
+		return getTransform();
 	}
 
 	@Override
@@ -45,6 +117,13 @@ public class SequenceCoordinateTransform extends AbstractCoordinateTransform<Rea
 			transform.add( t.getTransform(n5) );
 
 		return transform;
+	}
+
+	public RealTransform getTransformTotal( final N5Reader n5 )
+	{
+
+
+		return null;
 	}
 
 	public CoordinateTransform<?>[] getTransformations() {
@@ -124,6 +203,234 @@ public class SequenceCoordinateTransform extends AbstractCoordinateTransform<Rea
 		}
 
 		return dst;
+	}
+ 
+	/**
+	 * Checks if the list of transformations is valid.
+	 * A list is valid if an axis is an output of only one transformation,
+	 * and there are no loops in the graph.
+	 * 
+	 * @param tforms transformation list
+	 * @return if the transform is valie
+	 */
+	public static boolean isValid( CoordinateTransform<?>[] tforms )
+	{
+		HashSet<String> outputAxes = new HashSet<>();	
+		for( CoordinateTransform<?> t : tforms )
+		{
+			for( String a : t.getOutputAxes() )
+				if( outputAxes.contains( a ))
+					return false;
+				else
+					outputAxes.add( a );
+		}
+		return true;
+	}
+
+	/**
+	 * Builds a list of axes for intermediate results given a set of target axes and a list of transformations.
+	 *
+	 * Currently does not allow re-used axes.
+	 * 
+	 * @param tforms transformations
+	 * @param tgtAxes target axis names
+	 * @return list of intermediate axis lists
+	 */
+	public static ArrayList< String[] > axisOrdersForTransform2( final CoordinateTransform<?>[] tforms, final String[] tgtAxes )
+	{
+		System.out.println( "\naxisOrdersForTransform" );
+
+		// work backwards:
+		// we need to end up with the target axes
+		final ArrayList<String[]> axisOrders = new ArrayList<>();
+		axisOrders.add( tgtAxes );
+
+		// reverse the list of transforms
+		final ArrayList<CoordinateTransform<?>> tlist = new ArrayList<>();
+		Collections.addAll( tlist, tforms );
+		Collections.reverse( tlist );
+
+		final ArrayList<String> axes = new ArrayList<>();
+		Collections.addAll( axes, tgtAxes );
+		for( final CoordinateTransform<?> t : tlist )
+		{
+			final List< String > inAx = Arrays.asList( t.getInputAxes() );
+			final List< String > outAx = Arrays.asList( t.getOutputAxes() );
+			axes.removeAll( outAx );
+			axes.addAll( inAx );
+
+			axisOrders.add( axes.stream().toArray( String[]::new ));
+		}
+		System.out.println( "" );
+		Collections.reverse( axisOrders );
+		return axisOrders;
+	}
+	
+	/**
+	 * Builds a list of axes for intermediate results given a set of target axes and a list of transformations.
+	 *
+	 * Currently does not allow re-used axes.
+	 * 
+	 * @param tforms transformations
+	 * @param tgtAxes target axis names
+	 * @return list of intermediate axis lists
+	 */
+	public static ArrayList< String[] > axisOrdersForTransform( final CoordinateTransform<?>[] tforms, final String[] tgtAxes )
+	{
+		System.out.println( "axisOrdersForTransform" );
+		
+		// work backwards:
+		// we need to end up with the target axes
+		final ArrayList<String[]> axisOrders = new ArrayList<>();
+		axisOrders.add( tgtAxes );
+
+		// reverse the list of transforms
+		final ArrayList<CoordinateTransform<?>> tlist = new ArrayList<>();
+		Collections.addAll( tlist, tforms );
+		Collections.reverse( tlist );
+
+		final ArrayList<String> axes = new ArrayList<>();
+		Collections.addAll( axes, tgtAxes );
+		for( final CoordinateTransform<?> t : tlist )
+		{
+			final List< String > inAx = Arrays.asList( t.getInputAxes() );
+			final List< String > outAx = Arrays.asList( t.getOutputAxes() );
+			final int i = firstIndex( axes, outAx );
+			axes.removeAll( outAx );
+			axes.addAll( i < 0 ? 0 : i, inAx );
+
+			axisOrders.add( axes.stream().toArray( String[]::new ));
+		}
+		System.out.println( "" );
+		Collections.reverse( axisOrders );
+		return axisOrders;
+	}
+
+	public static ArrayList< String[] > axisOrdersForTransformFirst( final CoordinateTransform<?>[] tforms, final String[] tgtAxes )
+	{
+		System.out.println( "axisOrdersForTransformFirst" );
+		
+		final ArrayList<String[]> axisOrders = new ArrayList<>();
+		axisOrders.add( tforms[0].getInputAxes() );
+
+		final ArrayList<String> axes = new ArrayList<>();
+		Collections.addAll( axes, tgtAxes );
+		for( final CoordinateTransform<?> t : tforms )
+		{
+			final List< String > inAx = Arrays.asList( t.getInputAxes() );
+			final List< String > outAx = Arrays.asList( t.getOutputAxes() );
+			final int i = firstIndex( axes, outAx );
+			axes.removeAll( outAx );
+			axes.addAll( i < 0 ? 0 : i, inAx );
+
+			axisOrders.add( axes.stream().toArray( String[]::new ));
+		}
+		System.out.println( "" );
+		Collections.reverse( axisOrders );
+		return axisOrders;
+	}
+	
+	public static ArrayList< HashSet< String > > cumNeededAxes( final CoordinateTransform<?>[] tforms )
+	{
+		System.out.println("cumNeededAxes");
+		ArrayList<CoordinateTransform> tlist = new ArrayList<>();
+		Collections.addAll( tlist, tforms );
+		Collections.reverse( tlist );
+
+		ArrayList<HashSet<String>> cAxisList = new ArrayList<>();
+		HashSet<String> prev = null;
+		for( CoordinateTransform t : tlist )
+		{
+			System.out.println( "t: " + t );
+			System.out.println( "  axes : " + Arrays.toString( t.getInputAxes() ) );
+			HashSet< String > set = new HashSet<>();
+			Collections.addAll( set, t.getInputAxes());
+			if( prev != null )
+				set.addAll( prev );
+
+			prev = set;
+			cAxisList.add( set );
+		}
+
+		Collections.reverse( cAxisList );	
+		return cAxisList;
+
+//		System.out.println( " ");
+//		for( HashSet<String> s : cAxisList )
+//			System.out.println(String.join(" ", s) );
+//
+//		Collections.reverse( cAxisList );
+//
+//		System.out.println( " ");
+//		for( HashSet<String> s : cAxisList )
+//			System.out.println(String.join(" ", s) );
+		
+	}
+
+
+	private static <T> int firstIndex( List<T> list, List<T> search )
+	{
+		int idx = -1;
+		for( T t : search )
+		{
+			final int i = list.indexOf( t );
+			if( i >= 0 && (idx < 0 || i < idx ))
+				idx = i;
+		}
+		return idx;
+	}
+
+	public static ArrayList< int[] > inputIndexesFromAxisOrders( final CoordinateTransform<?>[] tforms, List<String[]> axisOrders )
+	{
+		final ArrayList< int[] > idxList = new ArrayList<>();
+		for( int i = 0; i < tforms.length; i++ )
+			idxList.add( indexes( tforms[i].getInputAxes(), axisOrders.get( i )));
+
+		return idxList;
+	}
+	
+	public static ArrayList< int[] > outputIndexesFromAxisOrders( final CoordinateTransform<?>[] tforms, List<String[]> axisOrders )
+	{
+		final ArrayList< int[] > idxList = new ArrayList<>();
+		for( int i = 0; i < tforms.length; i++ )
+			idxList.add( indexes( tforms[i].getOutputAxes(), axisOrders.get( i + 1 )));
+
+		return idxList;
+	}
+	
+	/**
+	 * Returns the indexes of src objects into tgt object.
+	 * 
+	 * 
+	 * @param <T> the type
+	 * @param src
+	 * @param tgt
+	 * @return
+	 */
+	private static <T> int[] indexes( T[] src, T[] tgt )
+	{
+		int[] idxs = new int[ src.length ];
+		for( int i = 0; i < src.length; i++ )
+			idxs[ i ] = indexOf( src[i], tgt );
+
+		return idxs;
+	}
+
+	private static <T> int indexOf( T t, T[] tgt )
+	{
+		for( int i = 0; i < tgt.length; i++ )
+			if( tgt[i].equals( t ))
+				return i;
+
+		return -1;
+	}
+	
+	private static boolean isReindexed(int[] indexes) {
+		for( int i = 0; i < indexes.length; i++ )
+			if( indexes[i] != i )
+				return true;
+
+		return false;
 	}
 
 }

@@ -6,6 +6,15 @@ public abstract class AbstractParametrizedTransform<T extends RealTransform,P> e
 
 	private final String path;
 	
+	public AbstractParametrizedTransform( String type ) {
+		this( type, null );
+	}
+	
+	public AbstractParametrizedTransform( String type, String name ) {
+		super( type, name );
+		this.path = null;
+	}
+
 	public AbstractParametrizedTransform( String type, String name, String inputSpace, String outputSpace ) {
 		this( type, name, null, inputSpace, outputSpace );
 	}

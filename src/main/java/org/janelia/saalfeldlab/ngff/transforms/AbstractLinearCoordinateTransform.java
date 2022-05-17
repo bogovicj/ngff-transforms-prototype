@@ -14,6 +14,10 @@ import net.imglib2.util.Util;
 
 public abstract class AbstractLinearCoordinateTransform<T extends AffineGet,P> extends AbstractParametrizedTransform<T,P> implements LinearCoordinateTransform<T> {
 
+	public AbstractLinearCoordinateTransform( String type ) {
+		super( type );
+	}
+
 	public AbstractLinearCoordinateTransform( String type, String name, 
 			String inputSpace, String outputSpace ) {
 		super( type, name, inputSpace, outputSpace );

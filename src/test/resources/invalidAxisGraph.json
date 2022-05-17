@@ -1,0 +1,31 @@
+{
+  "spaces": [
+    {
+      "name": "ab",
+      "axes": [
+        { "label": "a", "type": "ab", "unit": "ab's", "discrete": false },
+        { "label": "b", "type": "ab", "unit": "ab's", "discrete": false }
+      ]
+    }
+  ],
+  "transforms": [
+    {
+      "name": "0>ab",
+      "type": "matrix",
+      "matrix": [ 2, 3 ],
+      "numSourceDimensions": 1,
+      "numTargetDimensions": 2,
+      "input_axes": [ "dim_0" ],
+      "output_axes": [ "a", "b" ]
+    },
+    {
+      "name": "1>a",
+      "type": "matrix",
+      "matrix": [ 4 ],
+      "numSourceDimensions": 1,
+      "numTargetDimensions": 1,
+      "input_axes": [ "dim_1" ],
+      "output_axes": [ "a" ]
+    }
+  ]
+}

@@ -23,7 +23,6 @@ import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.IdentityCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.SequenceCoordinateTransform;
 
-import bdv.img.WarpedSource;
 import bdv.util.BdvFunctions;
 import bdv.util.BdvOptions;
 import bdv.util.RandomAccessibleIntervalSource;
@@ -78,7 +77,7 @@ public class Common {
 	public static AffineTransform3D toAffine3D( N5Reader n5, Collection<CoordinateTransform<?>> transforms )
 	{
 		final AffineTransform3D total = new AffineTransform3D();
-		for( CoordinateTransform ct : transforms )
+		for( CoordinateTransform<?> ct : transforms )
 		{
 			if( ct instanceof IdentityCoordinateTransform )
 				continue;
@@ -203,6 +202,7 @@ public class Common {
 		final Multiscale ms = multiscales[0];
 		
 		int N = ms.datasets.length;
+		@SuppressWarnings( "unchecked" )
 		final RandomAccessibleInterval<T>[] images = new RandomAccessibleInterval[ N ];
 		final AffineTransform3D[] transforms = new AffineTransform3D[ N ];
 
@@ -306,7 +306,11 @@ public class Common {
 
 	public static TransformGraph buildGraph( N5Reader n5, String dataset ) throws IOException 
 	{
-		return buildGraph( n5, dataset, 5 );
+		int nd = 5;
+		if( n5.datasetExists( dataset ))
+			nd = n5.getDatasetAttributes( dataset ).getNumDimensions();
+
+		return buildGraph( n5, dataset, nd );
 	}
 
 	public static TransformGraph buildGraph( N5Reader n5, String dataset, int nd ) throws IOException 
@@ -315,7 +319,7 @@ public class Common {
 		if( spaces == null )
 			spaces = n5.getAttribute(dataset, "coordinateSystems", Space[].class);
 
-		CoordinateTransform[] transforms = n5.getAttribute(dataset, "transformations", CoordinateTransform[].class);
+		CoordinateTransform<?>[] transforms = n5.getAttribute(dataset, "transformations", CoordinateTransform[].class);
 		if( transforms == null )
 			transforms = n5.getAttribute(dataset, "coordinateTransformations", CoordinateTransform[].class);
 

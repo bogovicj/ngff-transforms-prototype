@@ -65,6 +65,7 @@ public class TransformGraph
 //				spacesToNodes.put( src, node );
 //			}
 		}
+		updateTransforms();
 	}
 
 	public TransformGraph( List< CoordinateTransform<?> > transforms, final List<Space> spacesIn ) {
@@ -135,11 +136,17 @@ public class TransformGraph
 		else
 		{
 			System.out.println( "adding despite missing space: " + t );
+//			spaces.makeDefault( t.getInputAxes() )
 			transforms.add( t );
 		}
 		
 		if( addInverse && t instanceof InvertibleCoordinateTransform )
 			addTransform( new InverseCT( (InvertibleCoordinateTransform) t ), false );
+	}
+	
+	public void updateTransforms()
+	{
+		getSpaces().updateTransforms( getTransforms().stream() );
 	}
 	
 //	private void addInverse( InvertibleCoordinateTransform<?> ict )

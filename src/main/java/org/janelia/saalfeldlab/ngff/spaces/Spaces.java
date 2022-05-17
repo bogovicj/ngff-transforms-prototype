@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 import org.janelia.saalfeldlab.ngff.axes.Axis;
 import org.janelia.saalfeldlab.ngff.transforms.AbstractCoordinateTransform;
 import org.janelia.saalfeldlab.ngff.transforms.CoordinateTransform;
+import org.janelia.saalfeldlab.ngff.transforms.SequenceCoordinateTransform;
 
 /**
  * This class manages Axes and Spaces.
@@ -55,7 +56,15 @@ public class Spaces {
 	public Axis[] axesFromLabels(String... axisLabels )
 	{
 		return Arrays.stream(axisLabels).map( l -> {
-			return nameToAxis.get(l);
+
+			if( nameToAxis.containsKey( l ))
+				return nameToAxis.get(l);
+			else
+			{
+				final Axis a = makeDefaultAxis( l );
+				add( a );
+				return a;
+			}
 		}).toArray( Axis[]::new );
 	}
 
@@ -128,6 +137,11 @@ public class Spaces {
 
 	public Space makeDefaultSpace( final String... axisLabels ) {
 		return makeDefaultSpace( defaultSpaceName( axisLabels ), axisLabels );
+	}
+
+	public static Axis makeDefaultAxis( final String name )
+	{
+		return new Axis( name, "", "", false );
 	}
 
 	public Space makeDefaultSpace( final String name, final String... axisLabels ) {
@@ -323,21 +337,53 @@ public class Spaces {
 	{
 		transforms.forEach( s -> {
 			if( s instanceof AbstractCoordinateTransform) {
-				AbstractCoordinateTransform t = (AbstractCoordinateTransform)s;
-
-			if( t.getInputSpace() != null )
-				t.setInputSpace( nameToSpace.get( t.getInputSpace() ));
-			else if ( t.getInputAxes() != null )
-				t.setInputSpace( new Space("", axesFromLabels( t.getInputAxes()) ));
-
-			if( t.getOutputSpace() != null )
-				t.setOutputSpace( nameToSpace.get( t.getOutputSpace() ));
-			else if ( t.getOutputAxes() != null )
-				t.setOutputSpace( new Space("", axesFromLabels( t.getOutputAxes()) ));
-
+				updateTransform( (AbstractCoordinateTransform)s );
+			}
+			
+			if( s instanceof SequenceCoordinateTransform )
+			{
+				SequenceCoordinateTransform t = (SequenceCoordinateTransform)s;
+				updateTransforms( Arrays.stream( t.getTransformations() ));
 			}
 		});
 		
+	}
+	
+	public < T extends AbstractCoordinateTransform< ? > > void updateTransform( T t )
+	{
+//		if( t.getInputSpace() == null && t.getInputAxes() == null )
+//		{
+//			t.setInputSpace( nameToSpace.get( t.getInputSpace() ) );
+//		}
+		if ( t.getInputSpace() != null )
+			t.setInputSpace( nameToSpace.get( t.getInputSpace() ));
+		else if ( t.getInputAxes() != null )
+			t.setInputSpace( makeDefault( t.getInputAxes() ));
+		
+		if ( t.getOutputSpace() != null )
+			t.setOutputSpace( nameToSpace.get( t.getOutputSpace() ));
+		else if ( t.getOutputAxes() != null )
+			t.setOutputSpace( makeDefault( t.getOutputAxes() ));
+	}
+	
+	public static String defaultName( String[] axes ) {
+		return String.join( "", axes ) + "(DEFAULT)";
+	}
+
+	public Space makeDefault( String[] axes )
+	{
+		final Axis[] a = axesFromLabels( axes );
+		if ( Arrays.stream( a ).allMatch( x -> x != null ) )
+			return new Space( defaultName( axes ), a );
+		else
+			return null;
+	}
+	
+	public Space addDefault( String[] axes )
+	{
+		final Space space = makeDefault( axes );
+		add( space );
+		return space;
 	}
 
 }

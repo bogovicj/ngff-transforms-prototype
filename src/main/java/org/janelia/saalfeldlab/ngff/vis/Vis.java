@@ -9,7 +9,6 @@ import org.janelia.saalfeldlab.n5.bdv.N5Source;
 import org.janelia.saalfeldlab.n5.ij.N5Factory;
 import org.janelia.saalfeldlab.ngff.examples.Common;
 import org.janelia.saalfeldlab.ngff.graph.TransformGraph;
-import org.janelia.saalfeldlab.ngff.graph.TransformPath;
 import org.janelia.saalfeldlab.ngff.multiscales.Multiscale;
 
 import bdv.util.BdvFunctions;
@@ -41,7 +40,7 @@ public class Vis {
 	TransformGraph graph;
 
 	BdvOptions options;
-
+	
 	public Vis() { }
 
 	public Vis( N5Reader n5 ) { 
@@ -51,6 +50,21 @@ public class Vis {
 	public Vis n5( N5Reader n5 ) {
 		this.n5 = n5;
 		return this;
+	}
+	
+	public N5Reader getN5()
+	{
+		return n5;
+	}
+	
+	public String getDataset()
+	{
+		return dataset;
+	}
+
+	public TransformGraph getGraph()
+	{
+		return graph;
 	}
 
 	public Vis n5( String n5root ) {

@@ -1,7 +1,6 @@
 package org.janelia.saalfeldlab.ngff.transforms;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import org.janelia.saalfeldlab.ngff.axes.AxisUtils;
 import org.janelia.saalfeldlab.ngff.spaces.RealCoordinate;
@@ -32,7 +31,7 @@ public abstract class AbstractCoordinateTransform<T extends RealTransform> imple
 	protected transient Space outputSpaceObj;
 
 	public abstract T getTransform();
-
+	
 	public AbstractCoordinateTransform( final String type, 
 			final String name,
 			final String inputSpace, final String outputSpace ) {
@@ -49,6 +48,15 @@ public abstract class AbstractCoordinateTransform<T extends RealTransform> imple
 		this.name = name;
 		this.input_axes = inputAxes;
 		this.output_axes = outputAxes;
+	}
+
+	public AbstractCoordinateTransform( final String type, final String name ) {
+		this.type = type;
+		this.name = name;
+	}
+
+	public AbstractCoordinateTransform( final String type ) {
+		this.type = type;
 	}
 
 	/**
@@ -76,12 +84,18 @@ public abstract class AbstractCoordinateTransform<T extends RealTransform> imple
 
 	public String[] getInputAxes()
 	{
-		return input_axes;
+		if( input_axes != null )
+			return input_axes;
+		else
+			return inputSpaceObj.getAxisLabels();
 	}
 
 	public String[] getOutputAxes()
 	{
-		return output_axes;
+		if( output_axes != null )
+			return output_axes;
+		else
+			return outputSpaceObj.getAxisLabels();
 	}
 
 	private static String spaceNameFromAxesLabels( Spaces spaces, String[] axes )
@@ -193,8 +207,6 @@ public abstract class AbstractCoordinateTransform<T extends RealTransform> imple
 	}
 
 	public RealCoordinate applyAppend( final RealCoordinate src ) {
-
-		// assumes that no 
 
 		final T t = getTransform();
 

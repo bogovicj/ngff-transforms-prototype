@@ -34,8 +34,10 @@ import net.imglib2.algorithm.componenttree.BuildComponentTree;
 import net.imglib2.realtransform.RealComponentMappingTransform;
 import net.imglib2.realtransform.RealInvertibleComponentMappingTransform;
 import net.imglib2.realtransform.RealTransform;
+import net.imglib2.realtransform.RealTransformSequence;
 import net.imglib2.realtransform.Scale2D;
 import net.imglib2.realtransform.StackedRealTransform;
+import net.imglib2.realtransform.SubsetRealTransform;
 import net.imglib2.realtransform.Translation3D;
 
 public class AxisSubspacesExperiments {
@@ -49,7 +51,9 @@ public class AxisSubspacesExperiments {
 //		final String testDataF = "src/test/resources/stack.json";
 //		final String testDataF = "src/test/resources/noStack.json";
 //		final String testDataF = "src/test/resources/multiLevelAxisGraph.json";
-		final String testDataF = "src/test/resources/multiLevelAxisGraph2.json";
+//		final String testDataF = "src/test/resources/multiLevelAxisGraph2.json";
+		final String testDataF = "src/test/resources/transformSeqSimple.json";
+//		final String testDataF = "src/test/resources/invalidAxisGraph.json";
 
 		SpacesTransforms st = SpacesTransforms.loadFile(testDataF);
 		System.out.println( st );
@@ -67,10 +71,19 @@ public class AxisSubspacesExperiments {
 		
 //		subspaceNoStackTest( st );
 		
-		permMtxTest();
+//		permMtxTest();
 
 //		multilevelAxisGraphTest( st, "xyczt" );
+
+		// run with multiLevelAxisGraph2
 //		multilevelAxisGraphTest( st, "z" );
+
+		// run with transformSeqSimple
+		multilevelAxisGraphTest( st, "ab", 3 );
+
+		
+		// run with invalidAxisGraph
+//		System.out.println( isValid( st.transforms ));
 	}
 	
 	public static void permMtxTest()
@@ -106,29 +119,30 @@ public class AxisSubspacesExperiments {
 
 		RealCoordinate t = new RealCoordinate(2, toSpace);
 		ct.apply(f, t);
-		
+
 		System.out.println( f );
 		System.out.println( t );
-
-
-
-
 	}
 
 	public static void multilevelAxisGraphTest( SpacesTransforms st , String tgtSpaceName )
 	{
+		multilevelAxisGraphTest( st, tgtSpaceName, 5 );
+	}
 
+	public static void multilevelAxisGraphTest( SpacesTransforms st , String tgtSpaceName, int nd )
+	{
 		System.out.println( "multilevelAxisGraphTest" );
 		System.out.println( st );
 
-		TransformGraph g = st.buildTransformGraph(5);
-		g.getSpaces().updateTransforms( g.getTransforms().stream() );
+		TransformGraph g = st.buildTransformGraph(nd);
+		g.updateTransforms();
+//		g.getSpaces().updateTransforms( g.getTransforms().stream() );
 		System.out.println( g );
 		System.out.println( g.getTransforms().size() );
 //		g.getTransforms().stream().forEach( System.out::println );
 
-		CoordinateTransform<?> t = g.getTransforms().stream().filter(x -> x.getName().equals("0>ab")).findFirst().get();
-		System.out.println( t );
+//		CoordinateTransform<?> t = g.getTransforms().stream().filter(x -> x.getName().equals("0>ab")).findFirst().get();
+//		System.out.println( t );
 
 //		Space space0 = Common.makeSpace("", "0", "", "dim_0");
 //		RealCoordinate p = new RealCoordinate( 1, space0 );
@@ -147,6 +161,58 @@ public class AxisSubspacesExperiments {
 				arraySpace, tgtSpace );
 
 		System.out.println( xfm );
+
+		System.out.println( "" );
+		System.out.println( "tform list:" );
+		Arrays.stream(xfm.getTransformations()).forEach( System.out::println );
+		System.out.println( "" );
+
+//		System.out.println( "" );
+//		cumNeededAxes( xfm.getTransformations() );
+//		cumInputAxes( xfm.getTransformations() );
+//		System.out.println( "" );
+
+//		System.out.println( "" );
+//		ArrayList< String[] > axOrders = axisOrdersForTransform( xfm.getTransformations(), tgtSpace.getAxisLabels() );
+//		for( String[] axes : axOrders )
+//			System.out.println(String.join(" ", axes ));
+//
+//		System.out.println( "" );
+//		
+//		ArrayList< int[] > inIdxes = inputIndexesFromAxisOrders( xfm.getTransformations(), axOrders );
+//		for( int[] idxs : inIdxes )
+//			System.out.println( Arrays.toString( idxs ));
+//
+//		System.out.println( "" );
+//
+//		ArrayList< int[] > outIdxes = outputIndexesFromAxisOrders( xfm.getTransformations(), axOrders );
+//		for( int[] idxs : outIdxes )
+//			System.out.println( Arrays.toString( idxs ));
+//
+//		RealTransformSequence totalTransform = new RealTransformSequence();
+//		CoordinateTransform[] tforms = xfm.getTransformations();
+//		for( int i = 0; i < tforms.length; i++ )
+//		{
+//			totalTransform.add( new SubsetRealTransform( tforms[i].getTransform(), inIdxes.get( i ), outIdxes.get(i) ));
+//		}
+//		System.out.println( "" );
+		
+		RealTransformSequence totalTransform = xfm.getTransform();
+		
+		System.out.println( "tform src dims: " + totalTransform.numSourceDimensions());
+		System.out.println( "tform tgt dims: " + totalTransform.numTargetDimensions());
+
+//		RealPoint p = new RealPoint( 1.0, 1.0, 1.0, 1.0, 1.0 );
+//		RealPoint q = new RealPoint( 1 );
+//		totalTransform.apply( p, q );
+//		System.out.println( "" );
+//		System.out.println( q );
+		
+		RealPoint p = new RealPoint( 1.0, 1.0, 1.0 );
+		RealPoint q = new RealPoint( 2 );
+		totalTransform.apply( p, q );
+		System.out.println( "" );
+		System.out.println( q );
 	}
 
 	public static void subspaceNoStackTest( SpacesTransforms st  )
@@ -313,7 +379,7 @@ public class AxisSubspacesExperiments {
 
 //		List<CoordinateTransform<?>> subTransforms = tGraph.subTransforms(arraySpace, xySpace);
 //		System.out.println( subTransforms.size() );
-//		for( CoordinateTransform ct : subTransforms )
+//		for( Coordinate)Transform ct : subTransforms )
 //		{
 //			System.out.println( ct.getName());
 //		}
@@ -584,6 +650,183 @@ public class AxisSubspacesExperiments {
 		totalTransform.buildTransform();
 
 		return totalTransform;
+	}
+
+	public static void tformGraph( final CoordinateTransform<?>[] tforms )
+	{
+
+		
+	}
+
+	public static void cumNeededAxes( final CoordinateTransform<?>[] tforms )
+	{
+		System.out.println("cumNeededAxes");
+		ArrayList<CoordinateTransform> tlist = new ArrayList<>();
+		Collections.addAll( tlist, tforms );
+		Collections.reverse( tlist );
+
+		ArrayList<HashSet<String>> cAxisList = new ArrayList<>();
+		HashSet<String> prev = null;
+		for( CoordinateTransform t : tlist )
+		{
+			System.out.println( "t: " + t );
+			System.out.println( "  axes : " + Arrays.toString( t.getInputAxes() ) );
+			HashSet< String > set = new HashSet<>();
+			Collections.addAll( set, t.getInputAxes());
+			if( prev != null )
+				set.addAll( prev );
+
+			prev = set;
+			cAxisList.add( set );
+		}
+
+//		System.out.println( " ");
+//		for( HashSet<String> s : cAxisList )
+//			System.out.println(String.join(" ", s) );
+//
+//		Collections.reverse( cAxisList );
+//
+//		System.out.println( " ");
+//		for( HashSet<String> s : cAxisList )
+//			System.out.println(String.join(" ", s) );
+		
+	}
+
+	public static void cumInputAxes( final CoordinateTransform<?>[] tforms )
+	{
+		System.out.println("cumInputAxes");
+		ArrayList<CoordinateTransform<?>> tlist = new ArrayList<>();
+		Collections.addAll( tlist, tforms );
+		Collections.reverse( tlist );
+
+		ArrayList<HashSet<String>> cAxisList = new ArrayList<>();
+		HashSet<String> prev = null;
+		for( CoordinateTransform<?> t : tlist )
+		{
+			System.out.println( "t: " + t );
+			System.out.println( "  axes : " + Arrays.toString( t.getInputAxes() ) );
+			HashSet< String > set = new HashSet<>();
+			Collections.addAll( set, t.getInputAxes());
+			if( prev != null )
+				set.addAll( prev );
+
+			prev = set;
+			cAxisList.add( set );
+		}
+
+		System.out.println( " ");
+		for( HashSet<String> s : cAxisList )
+			System.out.println(String.join(" ", s) );
+
+		Collections.reverse( cAxisList );
+
+		System.out.println( " ");
+		for( HashSet<String> s : cAxisList )
+			System.out.println(String.join(" ", s) );
+	}
+	
+	/**
+	 * Checks if the list of transformations is valid.
+	 * A list is valid if an axis is an output of only one transformation,
+	 * and there are no loops in the graph.
+	 * 
+	 * @param tforms transformation list
+	 * @return if the transform is valie
+	 */
+	public static boolean isValid( CoordinateTransform<?>[] tforms )
+	{
+		HashSet<String> outputAxes = new HashSet<>();	
+		for( CoordinateTransform<?> t : tforms )
+		{
+			for( String a : t.getOutputAxes() )
+				if( outputAxes.contains( a ))
+					return false;
+				else
+					outputAxes.add( a );
+		}
+		return true;
+	}
+	
+	public static ArrayList< String[] > axisOrdersForTransform( final CoordinateTransform<?>[] tforms, final String[] tgtAxes )
+	{
+		final ArrayList<String[]> axisOrders = new ArrayList<>();
+		axisOrders.add( tgtAxes );
+
+		final ArrayList<CoordinateTransform<?>> tlist = new ArrayList<>();
+		Collections.addAll( tlist, tforms );
+		Collections.reverse( tlist );
+
+		final ArrayList<String> axes = new ArrayList<>();
+		Collections.addAll( axes, tgtAxes );
+		for( final CoordinateTransform<?> t : tlist )
+		{
+			final List< String > inAx = Arrays.asList( t.getInputAxes() );
+			final List< String > outAx = Arrays.asList( t.getOutputAxes() );
+			final int i = firstIndex( axes, outAx );
+			axes.removeAll( outAx );
+			axes.addAll( i < 0 ? 0 : i, inAx );
+
+			axisOrders.add( axes.stream().toArray( String[]::new ));
+		}
+		Collections.reverse( axisOrders );
+		return axisOrders;
+	}
+
+	private static <T> int firstIndex( List<T> list, List<T> search )
+	{
+		int idx = -1;
+		for( T t : search )
+		{
+			final int i = list.indexOf( t );
+			if( i >= 0 && (idx < 0 || i < idx ))
+				idx = i;
+		}
+		return idx;
+	}
+
+	public static ArrayList< int[] > inputIndexesFromAxisOrders( final CoordinateTransform<?>[] tforms, List<String[]> axisOrders )
+	{
+		final ArrayList< int[] > idxList = new ArrayList<>();
+		for( int i = 0; i < tforms.length; i++ )
+			idxList.add( indexes( tforms[i].getInputAxes(), axisOrders.get( i )));
+
+		return idxList;
+	}
+	
+	public static ArrayList< int[] > outputIndexesFromAxisOrders( final CoordinateTransform<?>[] tforms, List<String[]> axisOrders )
+	{
+		final ArrayList< int[] > idxList = new ArrayList<>();
+		for( int i = 0; i < tforms.length; i++ )
+			idxList.add( indexes( tforms[i].getOutputAxes(), axisOrders.get( i + 1 )));
+
+		return idxList;
+	}
+	
+	/**
+	 * Returns the indexes of src objects into tgt object.
+	 * 
+	 * 
+	 * @param <T> the type
+	 * @param src
+	 * @param tgt
+	 * @return
+	 */
+	private static <T> int[] indexes( T[] src, T[] tgt )
+	{
+		int[] idxs = new int[ src.length ];
+		for( int i = 0; i < src.length; i++ )
+			idxs[ i ] = indexOf( src[i], tgt );
+
+		return idxs;
+	}
+
+	private static <T> int indexOf( T t, T[] tgt )
+	{
+		for( int i = 0; i < tgt.length; i++ )
+			if( tgt[i].equals( t ))
+				return i;
+
+		return -1;
 	}
 
 }
