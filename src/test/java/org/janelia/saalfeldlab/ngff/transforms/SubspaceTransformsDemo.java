@@ -33,10 +33,12 @@ public class SubspaceTransformsDemo
 		final Space inputSpace = spaces.getSpace( "" );
 		final Space outputSpace = spaces.getSpace( "z" );
 		SequenceCoordinateTransform ct = buildTransformFromAxes( spaces, transforms, inputSpace, outputSpace );
+		
+		RealCoordinate p = new RealCoordinate( 5, inputSpace );
+		p.setPosition( new double[] {1, 1, 1, 1, 1 } );
+		RealCoordinate q = ct.applyAppend( p );
+		System.out.println( q );
 
-		testAxisPermutations( ct.getTransformations(), inputSpace, outputSpace );
-		
-		
 //		RealTransform totalTransform = ct.getTransformSubspaces();
 //		System.out.println( "tform src dims: " + totalTransform.numSourceDimensions());
 //		System.out.println( "tform tgt dims: " + totalTransform.numTargetDimensions());
@@ -46,6 +48,8 @@ public class SubspaceTransformsDemo
 //		totalTransform.apply( p, q );
 //		System.out.println( "" );
 //		System.out.println( q );
+
+//		testAxisPermutations( ct.getTransformations(), inputSpace, outputSpace );
 	}
 	
 	
