@@ -2,6 +2,7 @@ package org.janelia.saalfeldlab.ngff.transforms;
 
 import java.util.ArrayList;
 
+import org.janelia.saalfeldlab.ngff.axes.AxisPoint;
 import org.janelia.saalfeldlab.ngff.axes.AxisUtils;
 import org.janelia.saalfeldlab.ngff.spaces.RealCoordinate;
 import org.janelia.saalfeldlab.ngff.spaces.Space;
@@ -250,6 +251,37 @@ public abstract class AbstractCoordinateTransform<T extends RealTransform> imple
 //						src.getSpace().diff("", getInputSpaceObj())));
 //
 //		return dst;
+	}
+
+	public AxisPoint applyAxes( final AxisPoint src ) {
+
+		final T t = getTransform();
+
+		// check if this transform's input axes are a subspace
+		// of the source point
+		double[] in = new double[ t.numSourceDimensions() ];  // TODO optimize
+		double[] out = new double[ t.numTargetDimensions() ];  
+
+		if( getInputSpaceObj().isSubspaceOf( src.axisOrder() ))
+		{
+			src.localize( in, getInputAxes() );
+		}
+		else if( src.numDimensions() >= t.numSourceDimensions() )
+		{
+			System.err.println("WARNING: using first N dimensions of source point" );
+			// if not, default to using the first N dimensions
+			src.localize( in );
+		}
+		else
+		{
+			return null;
+		}
+
+		AxisPoint dst = src;
+		t.apply( in, out );
+		dst.setPositions( out, getOutputAxes() );
+		return dst;
+
 	}
 
 }

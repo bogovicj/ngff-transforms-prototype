@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.janelia.saalfeldlab.ngff.SpacesTransforms;
+import org.janelia.saalfeldlab.ngff.axes.AxisPoint;
 import org.janelia.saalfeldlab.ngff.axes.AxisUtils;
 import org.janelia.saalfeldlab.ngff.examples.Common;
 import org.janelia.saalfeldlab.ngff.spaces.RealCoordinate;
@@ -22,6 +23,13 @@ import net.imglib2.realtransform.SubsetRealTransform;
 
 public class SubspaceTransformsDemo
 {
+
+	public static void main( String[] args ) throws FileNotFoundException
+	{
+		ij2xy();
+//		ex01234abcdefZ();
+	}
+
 	public static void ex01234abcdefZ() throws FileNotFoundException
 	{
 		final String testDataF = "src/test/resources/multiLevelAxisGraph2.json";
@@ -34,10 +42,15 @@ public class SubspaceTransformsDemo
 		final Space outputSpace = spaces.getSpace( "z" );
 		SequenceCoordinateTransform ct = buildTransformFromAxes( spaces, transforms, inputSpace, outputSpace );
 		
-		RealCoordinate p = new RealCoordinate( 5, inputSpace );
-		p.setPosition( new double[] {1, 1, 1, 1, 1 } );
-		RealCoordinate q = ct.applyAppend( p );
-		System.out.println( q );
+//		RealCoordinate p = new RealCoordinate( 5, inputSpace );
+//		p.setPosition( new double[] {1, 1, 1, 1, 1 } );
+//		RealCoordinate q = ct.applyAppend( p );
+//		System.out.println( q );
+
+
+		AxisPoint p = new AxisPoint( new double[] { 1, 1, 1, 1, 1}, spaces.axesForSpace( "" ) );
+		AxisPoint q = ct.applyAxes( p );
+		System.out.print( q );
 
 //		RealTransform totalTransform = ct.getTransformSubspaces();
 //		System.out.println( "tform src dims: " + totalTransform.numSourceDimensions());
@@ -51,8 +64,7 @@ public class SubspaceTransformsDemo
 
 //		testAxisPermutations( ct.getTransformations(), inputSpace, outputSpace );
 	}
-	
-	
+
 	public static void ij2xy()
 	{
 		Spaces spaces = new Spaces();
@@ -66,7 +78,9 @@ public class SubspaceTransformsDemo
 
 		SequenceCoordinateTransform ct = buildTransformFromAxes( spaces, transforms, spaces.getSpace( "in" ), spaces.getSpace( "out" ));
 
-
+		AxisPoint p = new AxisPoint( new double[] { 1, 1 }, "i", "j" );
+		AxisPoint q = ct.applyAxes( p );
+		System.out.print( q );
 
 //		RealTransform totalTransform = ct.getTransform();
 //		System.out.println( "tform src dims: " + totalTransform.numSourceDimensions());
@@ -77,12 +91,6 @@ public class SubspaceTransformsDemo
 //		totalTransform.apply( p, q );
 //		System.out.println( "" );
 //		System.out.println( q ); // expect [2,3]
-	}
-
-	public static void main( String[] args ) throws FileNotFoundException
-	{
-//		ij2xy();
-		ex01234abcdefZ();
 	}
 	
 	public static SequenceCoordinateTransform buildTransformFromAxes( 
@@ -266,7 +274,7 @@ public class SubspaceTransformsDemo
 			System.out.println( " " );
 			k++;
 		}
-		
+
 	}
 
 }

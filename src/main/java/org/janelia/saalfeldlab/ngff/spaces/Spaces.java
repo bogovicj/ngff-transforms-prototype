@@ -127,6 +127,11 @@ public class Spaces {
 		return nameToSpace.get(name);
 	}
 	
+	public String[] axesForSpace( final String name )
+	{
+		return getSpace( name ).getAxisLabels();
+	}
+	
 	public boolean hasSpace( final String name ) {
 		return nameToSpace.containsKey(name);
 	}

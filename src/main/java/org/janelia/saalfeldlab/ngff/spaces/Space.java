@@ -56,6 +56,22 @@ public class Space {
 		return Arrays.stream(axes).map(Axis::getLabel).anyMatch(l -> l.equals(label));
 	}
 
+	/**
+	 * Is a a super set of b.
+	 * 
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	public static boolean isSuperspaceOf( String[] a, String[] b )
+	{
+		for( String l : b )
+			if( !contains( l, a ))
+				return false;
+
+		return true;
+	}
+
 	public boolean isSuperspaceOf( Space other ) {
 		return isSuperspaceOf(other.getAxisLabels());
 	}
@@ -73,6 +89,22 @@ public class Space {
 	public boolean isSubspaceOf( Space other ) 
 	{
 		return isSubspaceOf(other.getAxisLabels());
+	}
+
+	/**
+	 * Is a a subset of b.
+	 * 
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	public static boolean isSubspaceOf( String[] a, String[] b )
+	{
+		for( String l : b )
+			if( !contains( l, a ))
+				return false;
+
+		return true;
 	}
 
 	public boolean isSubspaceOf( String[] axisLabels )

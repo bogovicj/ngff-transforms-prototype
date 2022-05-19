@@ -1,6 +1,7 @@
 package org.janelia.saalfeldlab.ngff.transforms;
 
 import org.janelia.saalfeldlab.n5.N5Reader;
+import org.janelia.saalfeldlab.ngff.axes.AxisPoint;
 import org.janelia.saalfeldlab.ngff.spaces.RealCoordinate;
 
 import net.imglib2.realtransform.RealTransform;
@@ -26,5 +27,7 @@ public interface CoordinateTransform<T extends RealTransform> {
 	public RealCoordinate apply( RealCoordinate src, RealCoordinate dst );
 
 	public RealCoordinate applyAppend( RealCoordinate src );
+
+	public AxisPoint applyAxes( AxisPoint src );
 
 }

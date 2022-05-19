@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.janelia.saalfeldlab.n5.N5Reader;
+import org.janelia.saalfeldlab.ngff.axes.AxisPoint;
 import org.janelia.saalfeldlab.ngff.spaces.RealCoordinate;
 
 import net.imglib2.realtransform.RealTransform;
@@ -128,6 +129,23 @@ public class SequenceCoordinateTransform extends AbstractCoordinateTransform<Rea
 
 	public CoordinateTransform<?>[] getTransformations() {
 		return transformations;
+	}
+
+	@Override
+	public AxisPoint applyAxes( final AxisPoint src )
+	{
+		System.out.println( " ");
+		System.out.println( "sequence apply axes");
+		System.out.println( "src space: " + src );
+		AxisPoint dst = src;
+		for( CoordinateTransform<?> t : transformations )
+		{
+			dst.setAxisOrder( t.getInputAxes() );
+			dst = t.applyAxes(dst);
+			dst.setAxisOrder( t.getOutputAxes() ); 
+		}
+		dst.setAxisOrder( getOutputAxes() );
+		return dst;
 	}
 
 	@Override
